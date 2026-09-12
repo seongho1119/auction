@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 
-// In dev, use Vite proxy (relative URL). In production, point to the same origin.
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || '/';
+// Production server URL (Render.com) or VITE_SERVER_URL env or local proxy
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'https://auction-server-bqvr.onrender.com' : '/');
 
 export const socket = io(SERVER_URL, {
   autoConnect: false,
