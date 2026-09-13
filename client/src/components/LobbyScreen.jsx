@@ -162,7 +162,7 @@ export function LobbyScreen({ onJoined }) {
               {/* Room Cards List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 340, overflowY: 'auto', paddingRight: 2, marginBottom: 20 }}>
                 {openRooms.length === 0 ? (
-                  <div style={{ padding: '32px 16px', textAlign: 'center', background: '#97ECB9', border: '2px solid #44A32A', borderRadius: 'var(--r-md)', color: '#141414', fontSize: 14, fontWeight: 700 }}>
+                  <div style={{ padding: '32px 16px', textAlign: 'center', background: '#ffffff', border: '1.5px dashed rgba(20,20,20,0.3)', borderRadius: 'var(--r-md)', color: '#6b6b6b', fontSize: 14, fontWeight: 600 }}>
                     현재 열린 방이 없습니다.<br />새로운 방을 만들어보세요!
                   </div>
                 ) : (
@@ -174,8 +174,8 @@ export function LobbyScreen({ onJoined }) {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '14px 18px',
-                        background: '#97ECB9',
-                        border: '2px solid #44A32A',
+                        background: '#ffffff',
+                        border: '1.5px solid #141414',
                         borderRadius: 'var(--r-lg)',
                         transition: 'all 200ms ease',
                       }}

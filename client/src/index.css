@@ -1,63 +1,50 @@
 /* ============================================================
-   index.css — Auction Night Design System (White Theme / Editorial Clean)
-   Outfit Font · Pure Ink + Matte Gold + Crisp Paper Surfaces
-   DESIGN_VARIANCE: 8 / MOTION_INTENSITY: 7 / VISUAL_DENSITY: 4
+   index.css — Auction Night Design System (Hallmark Editorial Clean)
+   Outfit Font · Pure Ink (#141414) + Warm Cream (#FFF5E2) + Crimson (#E14731)
+   Green (#44A32A / #97ECB9) is RESTRICTED strictly to in-game felt background.
+   Hallmark pre-emit critique: P5 H5 E5 S5 R5 V5
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* ── Tokens (Custom Palette: Warm Cream #FFF5E2 / Text #141414 / Primary #97ECB9 / Secondary #44A32A / Accent #E14731) ── */
+/* ── Tokens (Warm Cream #FFF5E2 / Ink #141414 / Accent #E14731 / Felt Green #44A32A for gameboard bg only) ── */
 :root {
   --bg-void: #FFF5E2;
   --bg-abyss: #ffffff;
-  --bg-surface: #f9eed7;
-  --bg-raised: #f2e3c6;
+  --bg-surface: #f7ebd5;
+  --bg-raised: #f0e0c2;
   --bg-card: #ffffff;
   --bg-overlay: rgba(255, 245, 226, 0.95);
 
-  --primary: #97ECB9;
-  --primary-dark: #44A32A;
-  --secondary: #44A32A;
-  --secondary-dim: rgba(68, 163, 42, 0.14);
+  --primary: #141414;
+  --primary-light: #383838;
+  --secondary: #141414;
   --accent: #E14731;
-  --accent-dim: rgba(225, 71, 49, 0.14);
+  --accent-dim: rgba(225, 71, 49, 0.12);
 
-  --gold: #44A32A;
-  --gold-bright: #44A32A;
-  --gold-dim: rgba(151, 236, 185, 0.3);
-  --gold-glow: rgba(151, 236, 185, 0.2);
-
-  --emerald: #44A32A;
-  --emerald-dim: rgba(68, 163, 42, 0.12);
-  --rose: #E14731;
-  --rose-dim: rgba(225, 71, 49, 0.12);
-  --violet: #44A32A;
-  --violet-dim: rgba(68, 163, 42, 0.12);
-  --sky: #44A32A;
+  --felt-bg: radial-gradient(ellipse at center, #3ea524 0%, #44A32A 65%, #2a7319 100%);
+  --felt-border: #2a7319;
+  --felt-accent: #97ECB9;
 
   --text-primary: #141414;
   --text-secondary: #383838;
   --text-muted: #6b6b6b;
-  --text-gold: #44A32A;
 
   --border-0: rgba(20, 20, 20, 0.08);
-  --border-1: rgba(20, 20, 20, 0.15);
-  --border-2: rgba(20, 20, 20, 0.25);
-  --border-gold: rgba(68, 163, 42, 0.4);
+  --border-1: rgba(20, 20, 20, 0.18);
+  --border-2: #141414;
 
-  --shadow-sm: 0 1px 3px rgba(20,20,20,0.05), 0 1px 2px rgba(20,20,20,0.03);
-  --shadow-md: 0 4px 20px -2px rgba(20,20,20,0.06), 0 2px 6px -1px rgba(20,20,20,0.03);
-  --shadow-lg: 0 20px 48px -4px rgba(20,20,20,0.08), 0 4px 16px -2px rgba(20,20,20,0.04);
-  --shadow-gold: 0 8px 32px rgba(68, 163, 42, 0.15);
-  --shadow-card: 0 2px 12px rgba(20,20,20,0.04), 0 1px 2px rgba(20,20,20,0.02);
+  --shadow-sm: 0 1px 3px rgba(20,20,20,0.06);
+  --shadow-md: 0 4px 16px -2px rgba(20,20,20,0.08);
+  --shadow-lg: 0 16px 40px -4px rgba(20,20,20,0.12);
 
   --font: 'Outfit', -apple-system, sans-serif;
   --mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   --r-sm: 8px;
-  --r-md: 14px;
-  --r-lg: 20px;
-  --r-xl: 28px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
   --r-full: 9999px;
 
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -251,24 +238,24 @@ body {
 .form-input {
   width: 100%;
   padding: 14px 18px;
-  background: #97ECB9;
-  border: 2px solid #44A32A;
+  background: #ffffff;
+  border: 1.5px solid #141414;
   border-radius: var(--r-md);
   color: #141414;
   font-family: var(--font);
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   outline: none;
   transition: border-color 200ms ease, box-shadow 200ms ease;
 }
 
 .form-input:focus {
-  border-color: #44A32A;
-  box-shadow: 0 0 0 3px rgba(68, 163, 42, 0.25);
-  background: #97ECB9;
+  border-color: #141414;
+  box-shadow: 0 0 0 3px rgba(20, 20, 20, 0.08);
+  background: #ffffff;
 }
 
-.form-input::placeholder { color: #383838; font-weight: 500; opacity: 0.75; }
+.form-input::placeholder { color: #888888; font-weight: 400; }
 
 /* Player count selector */
 .player-count-row {
@@ -280,8 +267,8 @@ body {
 
 .player-count-btn {
   padding: 12px;
-  background: #97ECB9;
-  border: 2px solid #44A32A;
+  background: #ffffff;
+  border: 1.5px solid #141414;
   border-radius: var(--r-md);
   color: #141414;
   font-family: var(--font);
@@ -292,10 +279,10 @@ body {
   text-align: center;
 }
 
-.player-count-btn:hover { background: #84e4aa; border-color: #44A32A; color: #141414; }
+.player-count-btn:hover { background: #f0e0c2; color: #141414; }
 .player-count-btn.active {
-  background: #44A32A;
-  border-color: #44A32A;
+  background: #141414;
+  border-color: #141414;
   color: #ffffff;
   box-shadow: var(--shadow-sm);
 }
@@ -322,9 +309,9 @@ body {
 /* Error */
 .form-error {
   font-size: 13px;
-  color: var(--rose);
-  background: var(--rose-dim);
-  border: 1px solid rgba(220,38,38,0.2);
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(225, 71, 49, 0.25);
   border-radius: var(--r-sm);
   padding: 10px 14px;
   margin-top: 14px;
@@ -353,40 +340,40 @@ body {
 .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
 
 .btn-primary {
-  background: #97ECB9;
-  color: #141414;
-  border: 2.5px solid #44A32A;
-  box-shadow: 0 4px 12px rgba(68,163,42,0.25);
+  background: #141414;
+  color: #ffffff;
+  border: 1.5px solid #141414;
+  box-shadow: 0 4px 12px rgba(20,20,20,0.15);
   font-weight: 800;
 }
 .btn-primary:hover:not(:disabled) {
-  background: #84e4aa;
-  border-color: #3b8e24;
+  background: #383838;
+  border-color: #383838;
   transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: #FFF5E2;
+  background: #ffffff;
   color: #141414;
-  border: 2px solid #44A32A;
+  border: 1.5px solid #141414;
   font-weight: 700;
 }
-.btn-secondary:hover:not(:disabled) { background: #f8e8cb; }
+.btn-secondary:hover:not(:disabled) { background: #f0e0c2; }
 
 .btn-ghost {
-  background: #97ECB9;
+  background: #ffffff;
   color: #141414;
-  border: 2px solid #44A32A;
+  border: 1.5px solid #141414;
   font-weight: 700;
 }
-.btn-ghost:hover:not(:disabled) { background: #84e4aa; border-color: #44A32A; color: #141414; }
+.btn-ghost:hover:not(:disabled) { background: #f0e0c2; color: #141414; }
 
 .btn-gold {
-  background: var(--gold);
+  background: #141414;
   color: #ffffff;
-  box-shadow: 0 2px 12px rgba(196,154,46,0.3);
+  box-shadow: 0 2px 12px rgba(20,20,20,0.2);
 }
-.btn-gold:hover:not(:disabled) { background: var(--gold-bright); }
+.btn-gold:hover:not(:disabled) { background: #383838; }
 
 .btn-danger {
   background: var(--rose-dim);
@@ -419,19 +406,19 @@ body {
 .waiting-card {
   width: 100%;
   max-width: 540px;
-  background: #FFF5E2;
-  border: 3px solid #44A32A;
+  background: #ffffff;
+  border: 2px solid #141414;
   border-radius: var(--r-xl);
   overflow: hidden;
-  box-shadow: 0 20px 50px rgba(20,20,20,0.18);
+  box-shadow: 0 16px 40px rgba(20,20,20,0.12);
 }
 
 .waiting-header {
   padding: 32px 32px 20px;
-  border-bottom: 2.5px solid #44A32A;
+  border-bottom: 2px solid #141414;
   text-align: center;
   position: relative;
-  background: #97ECB9;
+  background: #FFF5E2;
   color: #141414;
 }
 
@@ -440,7 +427,7 @@ body {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: #383838;
+  color: #6b6b6b;
   margin-bottom: 6px;
 }
 
@@ -472,19 +459,20 @@ body {
   gap: 12px;
   padding: 14px 18px;
   border-radius: var(--r-lg);
-  border: 2px solid #44A32A;
+  border: 1.5px solid #141414;
   background: #ffffff;
   transition: all 250ms ease;
 }
 
 .player-slot.filled {
-  border: 2.5px solid #44A32A;
-  background: #97ECB9;
+  border: 2px solid #141414;
+  background: #FFF5E2;
 }
 
 .player-slot.empty {
-  opacity: 0.6;
+  opacity: 0.5;
   border-style: dashed;
+  border-color: rgba(20,20,20,0.3);
 }
 
 .slot-avatar {
@@ -497,7 +485,7 @@ body {
   font-size: 18px;
   flex-shrink: 0;
   background: #ffffff;
-  border: 2px solid #44A32A;
+  border: 1.5px solid #141414;
 }
 
 .slot-name {
@@ -552,7 +540,7 @@ body {
   display: grid;
   gap: 10px;
   padding: 10px 16px;
-  border-bottom: 3px solid #44A32A;
+  border-bottom: 2px solid #141414;
   background: #FFF5E2;
   align-items: center;
 }
@@ -568,15 +556,15 @@ body {
   gap: 12px;
   padding: 10px 16px;
   border-radius: var(--r-lg);
-  border: 2px solid #44A32A;
-  background: #FFF5E2;
+  border: 1.5px solid #141414;
+  background: #ffffff;
   overflow: hidden;
   transition: all 250ms ease;
 }
 
 .opp-panel.active {
-  border-color: #44A32A;
-  background: #97ECB9;
+  border-color: #141414;
+  background: #FFF5E2;
   box-shadow: var(--shadow-sm);
 }
 
@@ -584,8 +572,8 @@ body {
   width: 36px;
   height: 36px;
   border-radius: var(--r-full);
-  background: #ffffff;
-  border: 2px solid #44A32A;
+  background: #FFF5E2;
+  border: 1.5px solid #141414;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -603,8 +591,8 @@ body {
 .opp-money {
   font-family: var(--mono);
   font-size: 13px;
-  color: #44A32A;
-  font-weight: 800;
+  color: #141414;
+  font-weight: 900;
 }
 
 .opp-card-count {
@@ -623,9 +611,8 @@ body {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #141414;
-  background: #97ECB9;
-  border: 1.5px solid #44A32A;
+  color: #ffffff;
+  background: #141414;
   border-radius: var(--r-full);
   padding: 2px 7px;
 }
@@ -657,9 +644,9 @@ body {
   align-items: center;
   gap: 16px;
   padding: 24px;
-  border: 2.5px dashed #97ECB9;
+  border: 2px dashed rgba(255, 255, 255, 0.4);
   border-radius: var(--r-xl);
-  background: rgba(0, 0, 0, 0.14);
+  background: rgba(0, 0, 0, 0.18);
   box-shadow: inset 0 2px 10px rgba(0,0,0,0.25);
   overflow-y: auto;
   color: #ffffff;
@@ -668,8 +655,8 @@ body {
 
 .auction-zone.live {
   border-style: solid;
-  border-color: #97ECB9;
-  box-shadow: 0 0 28px rgba(151, 236, 185, 0.45), inset 0 2px 10px rgba(0,0,0,0.2);
+  border-color: #ffffff;
+  box-shadow: 0 0 28px rgba(255, 255, 255, 0.25), inset 0 2px 10px rgba(0,0,0,0.2);
 }
 
 .auction-zone-label {
@@ -677,11 +664,11 @@ body {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  color: #97ECB9;
+  color: rgba(255, 255, 255, 0.85);
   align-self: flex-start;
 }
 
-.auction-zone-label.live-label { color: #97ECB9; }
+.auction-zone-label.live-label { color: #ffffff; }
 
 /* Deck & Round Info */
 .deck-pill {
@@ -689,8 +676,8 @@ body {
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  background: #97ECB9;
-  border: 2px solid #44A32A;
+  background: #ffffff;
+  border: 1.5px solid #141414;
   border-radius: var(--r-full);
 }
 
@@ -713,9 +700,8 @@ body {
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 800;
-  color: #141414;
-  background: #97ECB9;
-  border: 2px solid #44A32A;
+  color: #ffffff;
+  background: #141414;
   border-radius: var(--r-full);
   padding: 4px 12px;
 }
@@ -733,7 +719,7 @@ body {
   width: 90px;
   padding: 9px 12px;
   background: #ffffff;
-  border: 2px solid #44A32A;
+  border: 1.5px solid #141414;
   border-radius: var(--r-sm);
   color: #141414;
   font-family: var(--mono);
@@ -744,7 +730,7 @@ body {
   transition: border-color 180ms ease;
 }
 
-.bid-number-input:focus { border-color: #97ECB9; }
+.bid-number-input:focus { border-color: #E14731; }
 
 .bid-history {
   width: 100%;
@@ -764,12 +750,12 @@ body {
   border-radius: var(--r-sm);
   font-size: 12.5px;
   background: #ffffff;
-  border: 1px solid #44A32A;
+  border: 1px solid #141414;
 }
 
 .bid-row.top {
-  background: #97ECB9;
-  border: 2px solid #44A32A;
+  background: #FFF5E2;
+  border: 1.5px solid #141414;
 }
 
 .bid-row .bid-name { color: #141414; font-weight: 600; }
@@ -780,7 +766,7 @@ body {
 .event-log {
   display: flex;
   flex-direction: column;
-  border: 2.5px solid #44A32A;
+  border: 2px solid #141414;
   border-radius: var(--r-xl);
   overflow: hidden;
   background: #FFF5E2;
@@ -790,13 +776,13 @@ body {
 
 .event-log-head {
   padding: 12px 16px;
-  border-bottom: 2px solid #44A32A;
+  border-bottom: 1.5px solid #141414;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: #141414;
-  background: #97ECB9;
+  color: #ffffff;
+  background: #141414;
 }
 
 .event-log-body {
