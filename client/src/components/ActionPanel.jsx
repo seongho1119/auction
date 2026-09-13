@@ -2,9 +2,9 @@
 // ActionPanel.jsx — 내 플레이어 액션 패널 (하단)
 // ============================================================
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { socket } from '../socket';
-import { Card, MiniCard } from './Card';
+import { CardFace, Card3D, MiniCard } from './Card';
 import { TradeProposalModal } from './TradeModal';
 import { AbilityModal } from './AbilityModal';
 
@@ -26,6 +26,7 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [abilityCard, setAbilityCard] = useState(null);
   const [selectedAuctionCardId, setSelectedAuctionCardId] = useState(null);
+  const [isDealing, setIsDealing] = useState(false);
 
   const myPlayer = gameState?.players?.find(p => p.id === myId);
   const isMyTurn = gameState?.players?.[gameState.turnIndex]?.id === myId;
@@ -33,7 +34,17 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
   const tradeCount = gameState?.turnActions?.tradeCount || 0;
   const inventory = myPlayer?.inventory || [];
 
+  // Interaction Lock trigger when inventory length grows (e.g. card deal)
+  useEffect(() => {
+    if (inventory.length > 0) {
+      setIsDealing(true);
+      const timer = setTimeout(() => setIsDealing(false), inventory.length * 150 + 600);
+      return () => clearTimeout(timer);
+    }
+  }, [inventory.length]);
+
   const handleStartAuction = () => {
+    if (isDealing) return;
     if (!selectedAuctionCardId) { onError?.('경매에 올릴 카드를 선택해 주세요.'); return; }
     socket.emit('auction:start', { cardId: selectedAuctionCardId }, (res) => {
       if (!res?.success) onError?.(res?.error || '경매 시작 실패');
@@ -42,6 +53,7 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
   };
 
   const handleBankSell = (cardId) => {
+    if (isDealing) return;
     socket.emit('bank:sell', { cardId }, (res) => {
       if (!res?.success) onError?.(res?.error || '은행 판매 실패');
       else onSuccess?.('판매 완료!');
@@ -49,6 +61,7 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
   };
 
   const handleEndTurn = () => {
+    if (isDealing) return;
     socket.emit('turn:end', {}, (res) => {
       if (!res?.success) onError?.(res?.error || '턴 종료 실패');
     });
@@ -81,7 +94,22 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
         />
       )}
 
-      <div className="my-panel">
+      <div className="my-panel" style={{ position: 'relative' }}>
+        {/* Interaction Lock overlay during dealing animation */}
+        {isDealing && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 30,
+              background: 'rgba(0, 0, 0, 0.05)',
+              cursor: 'wait',
+              borderRadius: 'var(--r-lg)',
+              pointerEvents: 'all',
+            }}
+          />
+        )}
+
         {/* Top row: info + actions */}
         <div className="my-panel-top">
           <div className="my-info">
@@ -89,7 +117,7 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
               <div className="my-name">{myPlayer.name}</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                 {isMyTurn ? (
-                  <span style={{ color: 'var(--gold)' }}>▶ 내 턴</span>
+                  <span style={{ color: 'var(--accent)', fontWeight: 800 }}>▶ 내 턴</span>
                 ) : (
                   <span>대기 중</span>
                 )}
@@ -108,10 +136,10 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
               <button
                 className="btn btn-primary btn-sm"
                 onClick={handleStartAuction}
-                disabled={auctionUsed || !selectedAuctionCardId || gameState.auction?.active}
+                disabled={isDealing || auctionUsed || !selectedAuctionCardId || gameState.auction?.active}
                 title={auctionUsed ? '이번 턴 경매 사용 완료' : '선택한 카드를 경매에 올립니다'}
               >
-                🔨 경매
+                경매
                 {auctionUsed && <span style={{ fontSize: 9, marginLeft: 4, opacity: 0.7 }}>완료</span>}
               </button>
             )}
@@ -121,17 +149,17 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
               <button
                 className="btn btn-secondary btn-sm"
                 onClick={() => setShowTradeModal(true)}
-                disabled={tradeCount >= 2 || gameState.trade?.active}
+                disabled={isDealing || tradeCount >= 2 || gameState.trade?.active}
                 title={tradeCount >= 2 ? '이번 턴 거래 2회 완료' : `거래 (${tradeCount}/2회)`}
               >
-                🤝 거래 ({tradeCount}/2)
+                거래 ({tradeCount}/2)
               </button>
             )}
 
             {/* 턴 종료 */}
             {isMyTurn && (
-              <button className="btn btn-danger btn-sm" onClick={handleEndTurn}>
-                ✓ 턴 종료
+              <button className="btn btn-danger btn-sm" onClick={handleEndTurn} disabled={isDealing}>
+                턴 종료
               </button>
             )}
           </div>
@@ -142,16 +170,16 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
             인벤토리 ({inventory.length}장)
             {selectedAuctionCardId && isMyTurn && !auctionUsed && (
-              <span style={{ color: 'var(--gold)', marginLeft: 8 }}>선택된 카드를 경매에 올릴 수 있습니다</span>
+              <span style={{ color: 'var(--accent)', fontWeight: 700, marginLeft: 8 }}>선택된 카드를 경매에 올릴 수 있습니다</span>
             )}
           </div>
-          <div className="my-inventory">
+          <div className="my-inventory" style={{ perspective: '1000px' }}>
             {inventory.length === 0 ? (
               <div className="inventory-empty">
-                <span>🃏</span> 카드가 없습니다
+                <span>[덱]</span> 카드가 없습니다
               </div>
             ) : (
-              inventory.map(card => {
+              inventory.map((card, idx) => {
                 const isSelected = selectedAuctionCardId === card.id;
                 const isAbility = card.type === 'ability';
                 const value = getCardSellValue(card, inventory);
@@ -164,17 +192,18 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
                     key={card.id}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}
                   >
-                    <Card
+                    <CardFace
                       card={card}
                       faceDown={false}
                       selected={isSelected}
                       showRealBadge={true}
+                      flightFrom={{ x: -140, y: -260 }}
+                      staggerIndex={idx}
                       onClick={() => {
-                        // 능력 카드는 클릭 시 능력 모달
+                        if (isDealing) return;
                         if (isAbility) {
                           setAbilityCard(card);
                         } else {
-                          // 물건 카드는 경매용 선택 토글
                           setSelectedAuctionCardId(prev => prev === card.id ? null : card.id);
                         }
                       }}
@@ -185,20 +214,21 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
                         className="btn btn-ghost btn-sm"
                         style={{ fontSize: 10, padding: '3px 8px' }}
                         onClick={() => handleBankSell(card.id)}
-                        disabled={!canBankSell}
+                        disabled={isDealing || !canBankSell}
                         title={canBankSell ? `은행에 $${earnFromSell} 판매` : '수수료 후 판매 불가'}
                       >
-                        🏦 ${earnFromSell > 0 ? earnFromSell : '×'}
+                        판매 ${earnFromSell > 0 ? earnFromSell : '×'}
                       </button>
                     )}
                     {/* Ability use badge */}
                     {isAbility && (
                       <button
                         className="btn btn-ghost btn-sm"
-                        style={{ fontSize: 10, padding: '3px 8px', color: '#a78bfa' }}
-                        onClick={() => setAbilityCard(card)}
+                        style={{ fontSize: 10, padding: '3px 8px', color: '#141414' }}
+                        onClick={() => !isDealing && setAbilityCard(card)}
+                        disabled={isDealing}
                       >
-                        ⚡ 사용
+                        능력 사용
                       </button>
                     )}
                   </div>
