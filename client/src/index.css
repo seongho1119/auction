@@ -6,43 +6,50 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* ── Tokens (White Theme) ─────────────────────────────────── */
+/* ── Tokens (Custom Palette: Warm Cream #FFF5E2 / Text #141414 / Primary #97ECB9 / Secondary #44A32A / Accent #E14731) ── */
 :root {
-  --bg-void: #faf9f5;
+  --bg-void: #FFF5E2;
   --bg-abyss: #ffffff;
-  --bg-surface: #f4f3ee;
-  --bg-raised: #ebe9e1;
+  --bg-surface: #f9eed7;
+  --bg-raised: #f2e3c6;
   --bg-card: #ffffff;
-  --bg-overlay: rgba(255, 255, 255, 0.94);
+  --bg-overlay: rgba(255, 245, 226, 0.95);
 
-  --gold: #c49a2e;
-  --gold-bright: #9e7b1a;
-  --gold-dim: rgba(196, 154, 46, 0.12);
-  --gold-glow: rgba(196, 154, 46, 0.08);
+  --primary: #97ECB9;
+  --primary-dark: #44A32A;
+  --secondary: #44A32A;
+  --secondary-dim: rgba(68, 163, 42, 0.14);
+  --accent: #E14731;
+  --accent-dim: rgba(225, 71, 49, 0.14);
 
-  --emerald: #059669;
-  --emerald-dim: rgba(5, 150, 105, 0.1);
-  --rose: #dc2626;
-  --rose-dim: rgba(220, 38, 38, 0.1);
-  --violet: #7c3aed;
-  --violet-dim: rgba(124, 58, 237, 0.1);
-  --sky: #0284c7;
+  --gold: #44A32A;
+  --gold-bright: #44A32A;
+  --gold-dim: rgba(151, 236, 185, 0.3);
+  --gold-glow: rgba(151, 236, 185, 0.2);
 
-  --text-primary: #0d0d11;
-  --text-secondary: #4a4a52;
-  --text-muted: #84848e;
-  --text-gold: #9e7b1a;
+  --emerald: #44A32A;
+  --emerald-dim: rgba(68, 163, 42, 0.12);
+  --rose: #E14731;
+  --rose-dim: rgba(225, 71, 49, 0.12);
+  --violet: #44A32A;
+  --violet-dim: rgba(68, 163, 42, 0.12);
+  --sky: #44A32A;
 
-  --border-0: rgba(13, 13, 17, 0.06);
-  --border-1: rgba(13, 13, 17, 0.12);
-  --border-2: rgba(13, 13, 17, 0.22);
-  --border-gold: rgba(196, 154, 46, 0.4);
+  --text-primary: #141414;
+  --text-secondary: #383838;
+  --text-muted: #6b6b6b;
+  --text-gold: #44A32A;
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
-  --shadow-md: 0 4px 20px -2px rgba(0,0,0,0.06), 0 2px 6px -1px rgba(0,0,0,0.03);
-  --shadow-lg: 0 20px 48px -4px rgba(0,0,0,0.08), 0 4px 16px -2px rgba(0,0,0,0.04);
-  --shadow-gold: 0 8px 32px rgba(196, 154, 46, 0.15);
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+  --border-0: rgba(20, 20, 20, 0.08);
+  --border-1: rgba(20, 20, 20, 0.15);
+  --border-2: rgba(20, 20, 20, 0.25);
+  --border-gold: rgba(68, 163, 42, 0.4);
+
+  --shadow-sm: 0 1px 3px rgba(20,20,20,0.05), 0 1px 2px rgba(20,20,20,0.03);
+  --shadow-md: 0 4px 20px -2px rgba(20,20,20,0.06), 0 2px 6px -1px rgba(20,20,20,0.03);
+  --shadow-lg: 0 20px 48px -4px rgba(20,20,20,0.08), 0 4px 16px -2px rgba(20,20,20,0.04);
+  --shadow-gold: 0 8px 32px rgba(68, 163, 42, 0.15);
+  --shadow-card: 0 2px 12px rgba(20,20,20,0.04), 0 1px 2px rgba(20,20,20,0.02);
 
   --font: 'Outfit', -apple-system, sans-serif;
   --mono: 'JetBrains Mono', 'Fira Code', monospace;

@@ -9,15 +9,9 @@ import { CardFace, MiniCard } from './Card';
 import { EventLog } from './EventLog';
 import { TradeProposalModal, TradeResponseModal } from './TradeModal';
 import { AbilityModal } from './AbilityModal';
+import { IconCrown, IconUser, IconMask, IconGem, IconHammer } from './SvgIcons';
 
-const PLAYER_EMOJIS = ['🎩', '👑', '🎭', '🃏'];
-const CARD_ICONS = {
-  1:'🏺',2:'🏺',3:'🕯️',4:'🕯️',5:'✉️',6:'✉️',7:'⌚',8:'⌚',
-  9:'🖼️',10:'🖼️',11:'🪙',12:'🪙',13:'💎',14:'💎',
-  15:'🗿',16:'🗿',17:'🗿',18:'🪆',19:'🪆',20:'🪆',
-  21:'⚡',22:'💣',23:'🎭',24:'🔍',25:'💵',26:'💰',
-  27:'💸',28:'🔄',29:'🔀',30:'🌀',31:'🎁',
-};
+const PLAYER_ICONS = [IconCrown, IconUser, IconMask, IconGem];
 const SET_VALUE_TABLE = { 0: 80, 1: 60, 2: 45, 3: 30 };
 
 function getCardValue(card, inventory) {
@@ -134,7 +128,12 @@ export function GameBoard({ gameState, myId, onError, onSuccess }) {
           return (
             <div key={opp.id} className={`opp-panel${active ? ' active' : ''}`}>
               {active && <div className="turn-pip">턴</div>}
-              <div className="opp-avatar">{PLAYER_EMOJIS[pi] || '👤'}</div>
+              <div className="opp-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {(() => {
+                  const IconComp = PLAYER_ICONS[pi % PLAYER_ICONS.length] || IconUser;
+                  return <IconComp className="w-5 h-5" color="var(--text-primary)" />;
+                })()}
+              </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="opp-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opp.name}</div>
                 <div className="opp-money">${opp.money}</div>
@@ -229,7 +228,7 @@ export function GameBoard({ gameState, myId, onError, onSuccess }) {
             </>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: 0.5 }}>
-              <div style={{ fontSize: 40 }}>🔨</div>
+              <IconHammer className="w-10 h-10" color="var(--text-muted)" />
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>경매 대기 중</div>
             </div>
           )}

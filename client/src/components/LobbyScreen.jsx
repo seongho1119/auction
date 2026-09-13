@@ -6,8 +6,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { socket, connectSocket } from '../socket';
+import { IconCrown, IconUser, IconMask, IconGem } from './SvgIcons';
 
-const PLAYER_EMOJIS = ['🎩', '👑', '🎭', '🃏'];
+const PLAYER_ICONS = [IconCrown, IconUser, IconMask, IconGem];
 const RULES = [
   '초기 자금 $100 지급',
   '31장 카드 덱 (물건 20 + 능력 11)',
@@ -352,8 +353,13 @@ export function WaitingRoom({ roomId, roomName, playerName, isHost, lobbyData, m
             const isFilled = !!p;
             return (
               <div key={i} className={`player-slot ${isFilled ? 'filled' : 'empty'}`}>
-                <div className="slot-avatar">
-                  {isFilled ? PLAYER_EMOJIS[i] || '👤' : '—'}
+                <div className="slot-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {isFilled ? (
+                    (() => {
+                      const IconComp = PLAYER_ICONS[i % PLAYER_ICONS.length];
+                      return <IconComp className="w-5 h-5" color="var(--primary-dark)" />;
+                    })()
+                  ) : '—'}
                 </div>
                 <div>
                   {isFilled ? (

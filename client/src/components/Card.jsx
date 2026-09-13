@@ -1,19 +1,13 @@
 // ============================================================
-// Card.jsx — CardFace + MiniCard components
+// Card.jsx — CardFace + MiniCard components (Zero Emoji Architecture)
 // ============================================================
 
-const CARD_ICONS = {
-  1:'🏺',2:'🏺',3:'🕯️',4:'🕯️',5:'✉️',6:'✉️',7:'⌚',8:'⌚',
-  9:'🖼️',10:'🖼️',11:'🪙',12:'🪙',13:'💎',14:'💎',
-  15:'🗿',16:'🗿',17:'🗿',18:'🪆',19:'🪆',20:'🪆',
-  21:'⚡',22:'💣',23:'🎭',24:'🔍',25:'💵',26:'💰',
-  27:'💸',28:'🔄',29:'🔀',30:'🌀',31:'🎁',
-};
+import { CARD_SVG_MAP, IconVase, IconLightning } from './SvgIcons';
 
 const SIZE_STYLES = {
-  sm: { width: 72, height: 100, iconSize: 20, nameSize: 8, priceSize: 9 },
-  md: { width: 92, height: 128, iconSize: 24, nameSize: 9, priceSize: 10 },
-  lg: { width: 120, height: 168, iconSize: 32, nameSize: 11, priceSize: 12 },
+  sm: { width: 72, height: 100, iconSize: 'w-5 h-5', nameSize: 8, priceSize: 9 },
+  md: { width: 92, height: 128, iconSize: 'w-6 h-6', nameSize: 9, priceSize: 10 },
+  lg: { width: 120, height: 168, iconSize: 'w-8 h-8', nameSize: 11, priceSize: 12 },
 };
 
 export function CardFace({ card, size = 'md', selected, showRealBadge, faceDown, onClick }) {
@@ -30,14 +24,15 @@ export function CardFace({ card, size = 'md', selected, showRealBadge, faceDown,
         <div className="card-back-face">
           <div className="card-back-pattern" />
           <div className="card-back-mark">
-            <span style={{ fontSize: 14, opacity: 0.4 }}>🎴</span>
+            <IconVase className="w-5 h-5 opacity-40" color="var(--text-muted)" />
           </div>
         </div>
       </div>
     );
   }
 
-  const icon = CARD_ICONS[card.id] || (isAbility ? '⚡' : '🃏');
+  const SvgComp = CARD_SVG_MAP[card.id] || (isAbility ? IconLightning : IconVase);
+  const iconColor = isAbility ? "var(--secondary)" : (card.isSet ? "var(--primary-dark)" : "var(--text-primary)");
   const priceDisplay = isAbility
     ? null
     : (card.isReal !== undefined ? `$${card.isReal ? card.realPrice : card.fakePrice}` : `$?`);
@@ -61,8 +56,10 @@ export function CardFace({ card, size = 'md', selected, showRealBadge, faceDown,
           {isAbility ? 'ABILITY' : 'ITEM'}
         </div>
 
-        {/* Icon */}
-        <div className="card-icon" style={{ fontSize: s.iconSize }}>{icon}</div>
+        {/* SVG Icon */}
+        <div className="card-icon" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <SvgComp className={s.iconSize} color={iconColor} />
+        </div>
 
         {/* Name */}
         <div className="card-name" style={{ fontSize: s.nameSize }}>
@@ -78,7 +75,7 @@ export function CardFace({ card, size = 'md', selected, showRealBadge, faceDown,
 
         {/* Set badge */}
         {card.isSet && (
-          <div className="tag tag-violet" style={{ marginTop: 3, fontSize: 7, padding: '1px 5px' }}>
+          <div className="tag tag-gold" style={{ marginTop: 3, fontSize: 7, padding: '1px 5px' }}>
             세트
           </div>
         )}
@@ -89,7 +86,8 @@ export function CardFace({ card, size = 'md', selected, showRealBadge, faceDown,
 
 export function MiniCard({ card, selected, showRealBadge, onClick }) {
   const isAbility = card?.type === 'ability';
-  const icon = card ? (CARD_ICONS[card.id] || '🃏') : '—';
+  const SvgComp = card ? (CARD_SVG_MAP[card.id] || IconVase) : null;
+  const iconColor = isAbility ? "var(--secondary)" : "var(--text-primary)";
 
   return (
     <div
@@ -105,14 +103,16 @@ export function MiniCard({ card, selected, showRealBadge, onClick }) {
           fontWeight: 700,
           padding: '1px 4px',
           borderRadius: '99px',
-          background: card.isReal ? 'rgba(62,201,126,0.15)' : 'rgba(232,92,92,0.15)',
-          color: card.isReal ? 'var(--emerald)' : 'var(--rose)',
-          border: `1px solid ${card.isReal ? 'rgba(62,201,126,0.3)' : 'rgba(232,92,92,0.3)'}`,
+          background: card.isReal ? 'rgba(68,163,42,0.15)' : 'rgba(225,71,49,0.15)',
+          color: card.isReal ? 'var(--secondary)' : 'var(--accent)',
+          border: `1px solid ${card.isReal ? 'rgba(68,163,42,0.3)' : 'rgba(225,71,49,0.3)'}`,
         }}>
           {card.isReal ? '진' : '가'}
         </div>
       )}
-      <div className="mini-card-icon">{icon}</div>
+      <div className="mini-card-icon" style={{ display: 'flex', alignItems: 'center' }}>
+        {SvgComp ? <SvgComp className="w-4 h-4" color={iconColor} /> : '—'}
+      </div>
       <div className="mini-card-name">{card?.name ?? '—'}</div>
     </div>
   );

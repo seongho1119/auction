@@ -78,7 +78,7 @@ function endTurn(state) {
       extraTurn: false,
     };
     const cp = getCurrentPlayer(newState);
-    newState.log.push(`✨ ${cp.name}이(가) 차례를 한번 더 진행합니다!`);
+    newState.log.push(`[추가턴] ${cp.name}이(가) 차례를 한번 더 진행합니다!`);
     return newState;
   }
 
@@ -96,14 +96,14 @@ function endTurn(state) {
   if (newState.turnsThisRound >= playerCount) {
     newState.roundIndex += 1;
     newState.turnsThisRound = 0;
-    newState.log.push(`🔔 라운드 ${newState.roundIndex} 완료! 모든 플레이어가 카드 1장씩 획득합니다.`);
+    newState.log.push(`[라운드] 라운드 ${newState.roundIndex} 완료! 모든 플레이어가 카드 1장씩 획득합니다.`);
 
     // 각 플레이어에게 카드 1장 지급 (덱에 남은 카드가 있는 경우)
     for (const player of newState.players) {
       if (newState.deck.length > 0) {
         const card = newState.deck.shift();
         player.inventory.push(card);
-        newState.log.push(`  📬 ${player.name}: "${card.name}" 획득`);
+        newState.log.push(`  [보상] ${player.name}: "${card.name}" 획득`);
       }
     }
   }
@@ -112,12 +112,12 @@ function endTurn(state) {
   if (!hasItemCardsInDeck(newState.deck)) {
     newState.gameEnded = true;
     newState.phase = 'ended';
-    newState.log.push('🏁 덱에 물건 카드가 소진되었습니다. 게임이 종료되었습니다!');
+    newState.log.push('[종료] 덱에 물건 카드가 소진되었습니다. 게임이 종료되었습니다!');
     return newState;
   }
 
   const next = getCurrentPlayer(newState);
-  newState.log.push(`🎯 ${next.name}의 턴입니다.`);
+  newState.log.push(`[턴] ${next.name}의 턴입니다.`);
   return newState;
 }
 
@@ -143,7 +143,7 @@ function startAuction(state, sellerId, cardId) {
     phase: 'bidding',
   };
   newState.turnActions.auctionUsed = true;
-  newState.log.push(`🔨 ${seller.name}이(가) "${card.name}"을(를) 경매에 올렸습니다.`);
+  newState.log.push(`[경매] ${seller.name}이(가) "${card.name}"을(를) 경매에 올렸습니다.`);
   return newState;
 }
 
@@ -162,7 +162,7 @@ function placeBid(state, bidderId, amount) {
   newState.auction.currentBid = amount;
   newState.auction.highestBidderId = bidderId;
   newState.auction.bids.push({ playerId: bidderId, amount });
-  newState.log.push(`💰 ${bidder.name}이(가) $${amount}에 입찰했습니다.`);
+  newState.log.push(`[입찰] ${bidder.name}이(가) $${amount}에 입찰했습니다.`);
   return newState;
 }
 
@@ -178,10 +178,10 @@ function closeAuction(state) {
     buyer.money -= auction.currentBid;
     seller.money += auction.currentBid;
     buyer.inventory.push({ ...auction.card });
-    newState.log.push(`✅ ${buyer.name}이(가) "${auction.card.name}"을(를) $${auction.currentBid}에 낙찰받았습니다.`);
+    newState.log.push(`[낙찰] ${buyer.name}이(가) "${auction.card.name}"을(를) $${auction.currentBid}에 낙찰받았습니다.`);
   } else {
     seller.inventory.push({ ...auction.card });
-    newState.log.push(`❌ "${auction.card.name}" 유찰. 판매자에게 반납됩니다.`);
+    newState.log.push(`[유찰] "${auction.card.name}" 유찰. 판매자에게 반납됩니다.`);
   }
 
   newState.auction = {
@@ -201,7 +201,7 @@ function drawFromDeck(state, playerId) {
   player.money -= 20;
   const card = newState.deck.shift();
   player.inventory.push(card);
-  newState.log.push(`🃏 ${player.name}이(가) $20을 내고 카드를 뽑았습니다.`);
+  newState.log.push(`[뽑기] ${player.name}이(가) $20을 내고 카드를 뽑았습니다.`);
   return newState;
 }
 
@@ -226,7 +226,7 @@ function sellToBank(state, playerId, cardId) {
   player.money += earn;
   if (player.freeBankSell) player.freeBankSell = false;
 
-  newState.log.push(`🏦 ${player.name}이(가) "${card.name}"을(를) 은행에 $${earn}에 판매했습니다.${fee === 0 ? ' (수수료 면제)' : ''}`);
+  newState.log.push(`[은행판매] ${player.name}이(가) "${card.name}"을(를) 은행에 $${earn}에 판매했습니다.${fee === 0 ? ' (수수료 면제)' : ''}`);
   return newState;
 }
 
@@ -293,7 +293,7 @@ function proposeTrade(state, proposerId, targetId, offerCards, offerMoney, reque
     status: 'pending',
   };
 
-  newState.log.push(`🤝 ${proposer.name}이(가) ${target.name}에게 거래를 제안했습니다.`);
+  newState.log.push(`[거래] ${proposer.name}이(가) ${target.name}에게 거래를 제안했습니다.`);
   return newState;
 }
 
@@ -320,11 +320,11 @@ function respondTrade(state, targetId, accepted) {
     target.money -= trade.request.money;
     proposer.money += trade.request.money;
 
-    newState.log.push(`✅ ${proposer.name}과(와) ${target.name}의 거래가 성사되었습니다.`);
+    newState.log.push(`[거래성사] ${proposer.name}과(와) ${target.name}의 거래가 성사되었습니다.`);
     newState.turnActions.tradeCount += 1;
     newState.turnActions.tradedWith.push(targetId);
   } else {
-    newState.log.push(`❌ ${target.name}이(가) 거래를 거절했습니다.`);
+    newState.log.push(`[거래거절] ${target.name}이(가) 거래를 거절했습니다.`);
   }
 
   newState.trade = { active: false, proposerId: null, targetId: null, offer: { cards: [], money: 0 }, request: { cards: [], money: 0 }, status: 'idle' };
@@ -335,7 +335,7 @@ function cancelTrade(state, proposerId) {
   const newState = deepClone(state);
   if (!newState.trade.active || newState.trade.proposerId !== proposerId) return { error: '취소할 수 없습니다.' };
   const proposer = newState.players.find(p => p.id === proposerId);
-  newState.log.push(`🚫 ${proposer.name}이(가) 거래를 취소했습니다.`);
+  newState.log.push(`[거래취소] ${proposer.name}이(가) 거래를 취소했습니다.`);
   newState.trade = { active: false, proposerId: null, targetId: null, offer: { cards: [], money: 0 }, request: { cards: [], money: 0 }, status: 'idle' };
   return newState;
 }
@@ -377,7 +377,7 @@ function useAbilityCard(state, userId, cardId, params = {}) {
     newState.deck = shuffleDeck(newState.deck);
   }
 
-  newState.log.push(`⚡ ${user.name}이(가) 능력 카드 "${card.name}"을(를) 사용했습니다.`);
+  newState.log.push(`[능력] ${user.name}이(가) 능력 카드 "${card.name}"을(를) 사용했습니다.`);
   return newState;
 }
 
@@ -394,7 +394,7 @@ function abilityForcedBuy(state, user, abilityCard) {
   user.inventory.push({ ...auctionCard });
 
   state.auction = { active: false, card: null, sellerId: null, bids: [], currentBid: 0, highestBidderId: null, phase: 'idle' };
-  state.log.push(`💥 ${user.name}이(가) "${auctionCard.name}"을(를) $${forcedPrice}에 강제 낙찰했습니다!`);
+  state.log.push(`[능력:강제낙찰] ${user.name}이(가) "${auctionCard.name}"을(를) $${forcedPrice}에 강제 낙찰했습니다!`);
   return state;
 }
 
@@ -406,7 +406,7 @@ function abilityDestroyItem(state, user, params) {
   const cardIdx = target.inventory.findIndex(c => c.id === targetCardId && c.type === 'item');
   if (cardIdx === -1) return { error: '해당 물건 카드를 찾을 수 없습니다.' };
   const [removed] = target.inventory.splice(cardIdx, 1);
-  state.log.push(`💣 ${user.name}이(가) ${target.name}의 "${removed.name}"을(를) 제거했습니다!`);
+  state.log.push(`[능력:카드제거] ${user.name}이(가) ${target.name}의 "${removed.name}"을(를) 제거했습니다!`);
   return state;
 }
 
@@ -419,7 +419,7 @@ function abilitySellFakeMinus10(state, user, params) {
   const earn = Math.max(0, card.fakePrice - 10);
   user.inventory.splice(cardIdx, 1);
   user.money += earn;
-  state.log.push(`🎭 ${user.name}이(가) "${card.name}"을(를) $${earn}에 판매했습니다.`);
+  state.log.push(`[능력:가품판매] ${user.name}이(가) "${card.name}"을(를) $${earn}에 판매했습니다.`);
   return state;
 }
 
@@ -438,13 +438,13 @@ function abilityRevealTruth(state, user, params) {
   if (!foundCard) return { error: '해당 카드를 찾을 수 없습니다.' };
   if (!user.revealedCards.includes(targetCardId)) user.revealedCards.push(targetCardId);
   state._revealResult = { userId: user.id, cardId: targetCardId, isReal: foundCard.isReal, cardName: foundCard.name };
-  state.log.push(`🔍 ${user.name}이(가) 카드의 진위를 확인했습니다.`);
+  state.log.push(`[능력:진위확인] ${user.name}이(가) 카드의 진위를 확인했습니다.`);
   return state;
 }
 
 function abilityMoneyPlus20(state, user) {
   user.money += 20;
-  state.log.push(`💵 ${user.name}이(가) $20을 획득했습니다!`);
+  state.log.push(`[능력:자금획득] ${user.name}이(가) $20을 획득했습니다!`);
   return state;
 }
 
@@ -460,7 +460,7 @@ function abilityCollect5(state, user) {
     totalCollected += actualDeduct;
   }
   user.money += totalCollected;
-  state.log.push(`💰 ${user.name}이(가) 다른 플레이어들로부터 총 $${totalCollected}을 걷었습니다!`);
+  state.log.push(`[능력:징수] ${user.name}이(가) 다른 플레이어들로부터 총 $${totalCollected}을 걷었습니다!`);
   return state;
 }
 
@@ -471,7 +471,7 @@ function abilityCollectBid10(state, user) {
   if (highBidder.money < 10) return { error: '최고 입찰자의 잔액이 부족합니다.' };
   highBidder.money -= 10;
   user.money += 10;
-  state.log.push(`💸 ${user.name}이(가) ${highBidder.name}에게 $10을 걷었습니다!`);
+  state.log.push(`[능력:입찰자징수] ${user.name}이(가) ${highBidder.name}에게 $10을 걷었습니다!`);
   return state;
 }
 
@@ -486,7 +486,7 @@ function abilitySwapAuctionCard(state, user) {
   state.auction.bids = [];
   state.auction.currentBid = 0;
   state.auction.highestBidderId = null;
-  state.log.push(`🔄 ${user.name}이(가) 경매 카드를 변경했습니다! 새 카드: "${newCard.name}"`);
+  state.log.push(`[능력:경매카드교체] ${user.name}이(가) 경매 카드를 변경했습니다! 새 카드: "${newCard.name}"`);
   return state;
 }
 
@@ -501,19 +501,19 @@ function abilityDiscardDraw(state, user, params) {
   state.deck = shuffleDeck(state.deck);
   const drawn = state.deck.shift();
   user.inventory.push(drawn);
-  state.log.push(`🔀 ${user.name}이(가) 카드를 버리고 새 카드를 뽑았습니다.`);
+  state.log.push(`[능력:카드교체] ${user.name}이(가) 카드를 버리고 새 카드를 뽑았습니다.`);
   return state;
 }
 
 function abilityExtraTurn(state, user) {
   state.turnActions.extraTurn = true;
-  state.log.push(`🌀 ${user.name}이(가) "차례 한번 더" 능력을 발동했습니다!`);
+  state.log.push(`[능력:추가턴] ${user.name}이(가) "차례 한번 더" 능력을 발동했습니다!`);
   return state;
 }
 
 function abilityFreeBankSell(state, user) {
   user.freeBankSell = true;
-  state.log.push(`🎁 ${user.name}이(가) 이번 판매에 수수료를 면제받습니다!`);
+  state.log.push(`[능력:수수료면제] ${user.name}이(가) 이번 판매에 수수료를 면제받습니다!`);
   return state;
 }
 
