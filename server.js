@@ -315,12 +315,40 @@ io.on('connection', (socket) => {
         const name = room.players[idx].name;
         room.players.splice(idx, 1);
         io.to(roomId).emit('player:left', { name, id: socket.id });
+
         if (room.state) {
+          // Remove player from active game state
+          const stateIdx = room.state.players.findIndex(p => p.id === socket.id);
+          if (stateIdx !== -1) {
+            room.state.players.splice(stateIdx, 1);
+          }
+
+          // Adjust turnIndex if turnIndex is out of bounds
+          if (room.state.turnIndex >= room.state.players.length) {
+            room.state.turnIndex = 0;
+          }
+
           room.state.log.push(`[퇴장] ${name}이(가) 게임을 떠났습니다.`);
+
+          // If 1 or 0 players remain during active game, automatically end the game
+          if (room.state.players.length <= 1 && !room.state.gameEnded) {
+            room.state.gameEnded = true;
+            room.state.log.push(`[게임 종료] 다른 모든 플레이어가 떠나 게임이 자동 종료되었습니다.`);
+            const results = room.state.players.map(p => ({
+              id: p.id,
+              name: p.name,
+              money: p.money,
+              inventory: p.inventory,
+              totalAsset: calcFinalAsset(p),
+            }));
+            io.to(roomId).emit('game:ended', { results });
+          }
+
           broadcastState(roomId);
         } else {
           broadcastLobby(roomId);
         }
+
         if (room.players.length === 0) {
           delete rooms[roomId];
         }

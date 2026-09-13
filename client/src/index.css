@@ -529,7 +529,7 @@ body {
 /* ── Game Board (White Theme) ────────────────────────────── */
 .board-root {
   display: grid;
-  grid-template-rows: 76px 1fr 140px;
+  grid-template-rows: auto 1fr auto;
   height: 100dvh;
   max-height: 100dvh;
   overflow: hidden;
@@ -537,12 +537,14 @@ body {
 }
 
 .board-top {
-  display: grid;
-  gap: 10px;
-  padding: 10px 16px;
-  border-bottom: 2px solid #141414;
-  background: #FFF5E2;
+  display: flex;
+  justify-content: space-around;
   align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 2.5px solid #141414;
+  background: #FFF5E2;
+  overflow-x: auto;
 }
 
 .board-top.players-2 { grid-template-columns: 1fr 1fr; }

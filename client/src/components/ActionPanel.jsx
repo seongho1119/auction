@@ -27,6 +27,7 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
   const [abilityCard, setAbilityCard] = useState(null);
   const [selectedAuctionCardId, setSelectedAuctionCardId] = useState(null);
   const [isDealing, setIsDealing] = useState(false);
+  const [filterType, setFilterType] = useState('all'); // 'all' | 'item' | 'ability'
 
   const myPlayer = gameState?.players?.find(p => p.id === myId);
   const isMyTurn = gameState?.players?.[gameState.turnIndex]?.id === myId;
@@ -69,6 +70,12 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
 
   if (!myPlayer) return null;
 
+  const filteredInventory = inventory.filter(card => {
+    if (filterType === 'item') return card.type !== 'ability';
+    if (filterType === 'ability') return card.type === 'ability';
+    return true;
+  });
+
   return (
     <>
       {/* Trade Modal */}
@@ -94,7 +101,7 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
         />
       )}
 
-      <div className="my-panel" style={{ position: 'relative' }}>
+      <div className="my-panel" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 20px', background: '#FFF5E2', borderTop: '3.5px solid #141414' }}>
         {/* Interaction Lock overlay during dealing animation */}
         {isDealing && (
           <div
@@ -110,132 +117,189 @@ export function ActionPanel({ gameState, myId, onError, onSuccess }) {
           />
         )}
 
-        {/* Top row: info + actions */}
-        <div className="my-panel-top">
-          <div className="my-info">
+        {/* Top row: Info + Filter Buttons + Actions */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+          <div className="my-info" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div>
-              <div className="my-name">{myPlayer.name}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              <div className="my-name" style={{ fontSize: 15, fontWeight: 800, color: '#141414' }}>{myPlayer.name}</div>
+              <div style={{ fontSize: 11, color: '#6b6b6b' }}>
                 {isMyTurn ? (
-                  <span style={{ color: 'var(--accent)', fontWeight: 800 }}>▶ 내 턴</span>
+                  <span style={{ color: '#E14731', fontWeight: 900 }}>▶ 내 턴</span>
                 ) : (
                   <span>대기 중</span>
                 )}
               </div>
             </div>
-            <div className="my-money">${myPlayer.money}</div>
+            <div className="my-money" style={{ fontSize: 20, fontFamily: 'var(--mono)', fontWeight: 900, color: '#44A32A' }}>
+              ${myPlayer.money}
+            </div>
             {myPlayer.freeBankSell && (
-              <span className="tag tag-gold">수수료 면제</span>
+              <span className="tag tag-gold" style={{ fontSize: 9 }}>수수료 면제</span>
             )}
           </div>
 
-          {/* Action buttons */}
-          <div className="my-actions">
-            {/* 경매 부치기 */}
-            {isMyTurn && (
+          {/* Filter tabs & Action buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            {/* Card Filter Tabs (물건 / 능력) */}
+            <div style={{ display: 'flex', background: '#ffffff', border: '1.5px solid #141414', borderRadius: 'var(--r-md)', padding: 2 }}>
               <button
-                className="btn btn-primary btn-sm"
-                onClick={handleStartAuction}
-                disabled={isDealing || auctionUsed || !selectedAuctionCardId || gameState.auction?.active}
-                title={auctionUsed ? '이번 턴 경매 사용 완료' : '선택한 카드를 경매에 올립니다'}
+                onClick={() => setFilterType('all')}
+                style={{
+                  padding: '4px 10px',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  borderRadius: 'var(--r-sm)',
+                  border: 'none',
+                  background: filterType === 'all' ? '#141414' : 'transparent',
+                  color: filterType === 'all' ? '#ffffff' : '#141414',
+                  cursor: 'pointer',
+                }}
               >
-                경매
-                {auctionUsed && <span style={{ fontSize: 9, marginLeft: 4, opacity: 0.7 }}>완료</span>}
+                전체 ({inventory.length})
               </button>
-            )}
-
-            {/* 거래 제안 */}
-            {isMyTurn && (
               <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => setShowTradeModal(true)}
-                disabled={isDealing || tradeCount >= 2 || gameState.trade?.active}
-                title={tradeCount >= 2 ? '이번 턴 거래 2회 완료' : `거래 (${tradeCount}/2회)`}
+                onClick={() => setFilterType('item')}
+                style={{
+                  padding: '4px 10px',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  borderRadius: 'var(--r-sm)',
+                  border: 'none',
+                  background: filterType === 'item' ? '#141414' : 'transparent',
+                  color: filterType === 'item' ? '#ffffff' : '#141414',
+                  cursor: 'pointer',
+                }}
               >
-                거래 ({tradeCount}/2)
+                물건 ({inventory.filter(c => c.type !== 'ability').length})
               </button>
-            )}
+              <button
+                onClick={() => setFilterType('ability')}
+                style={{
+                  padding: '4px 10px',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  borderRadius: 'var(--r-sm)',
+                  border: 'none',
+                  background: filterType === 'ability' ? '#141414' : 'transparent',
+                  color: filterType === 'ability' ? '#ffffff' : '#141414',
+                  cursor: 'pointer',
+                }}
+              >
+                능력 ({inventory.filter(c => c.type === 'ability').length})
+              </button>
+            </div>
 
-            {/* 턴 종료 */}
-            {isMyTurn && (
-              <button className="btn btn-danger btn-sm" onClick={handleEndTurn} disabled={isDealing}>
-                턴 종료
-              </button>
-            )}
+            {/* Action buttons */}
+            <div className="my-actions" style={{ display: 'flex', gap: 6 }}>
+              {isMyTurn && (
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={handleStartAuction}
+                  disabled={isDealing || auctionUsed || !selectedAuctionCardId || gameState.auction?.active}
+                  title={auctionUsed ? '이번 턴 경매 사용 완료' : '선택한 카드를 경매에 올립니다'}
+                >
+                  경매
+                  {auctionUsed && <span style={{ fontSize: 9, marginLeft: 4, opacity: 0.7 }}>완료</span>}
+                </button>
+              )}
+
+              {isMyTurn && (
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setShowTradeModal(true)}
+                  disabled={isDealing || tradeCount >= 2 || gameState.trade?.active}
+                  title={tradeCount >= 2 ? '이번 턴 거래 2회 완료' : `거래 (${tradeCount}/2회)`}
+                >
+                  거래 ({tradeCount}/2)
+                </button>
+              )}
+
+              {isMyTurn && (
+                <button className="btn btn-danger btn-sm" onClick={handleEndTurn} disabled={isDealing}>
+                  턴 종료
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Inventory */}
-        <div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            인벤토리 ({inventory.length}장)
-            {selectedAuctionCardId && isMyTurn && !auctionUsed && (
-              <span style={{ color: 'var(--accent)', fontWeight: 700, marginLeft: 8 }}>선택된 카드를 경매에 올릴 수 있습니다</span>
-            )}
-          </div>
-          <div className="my-inventory" style={{ perspective: '1000px' }}>
-            {inventory.length === 0 ? (
-              <div className="inventory-empty">
-                <span>[덱]</span> 카드가 없습니다
-              </div>
-            ) : (
-              inventory.map((card, idx) => {
-                const isSelected = selectedAuctionCardId === card.id;
-                const isAbility = card.type === 'ability';
-                const value = getCardSellValue(card, inventory);
-                const fee = myPlayer.freeBankSell ? 0 : 10;
-                const canBankSell = !isAbility && value > 10;
-                const earnFromSell = canBankSell ? value - fee : 0;
+        {/* Inventory Horizontal Row (No vertical stacking!) */}
+        <div
+          className="my-inventory"
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            gap: 12,
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            width: '100%',
+            padding: '4px 2px 10px 2px',
+            perspective: '1000px',
+            minHeight: 148,
+          }}
+        >
+          {filteredInventory.length === 0 ? (
+            <div className="inventory-empty" style={{ width: '100%', padding: '20px 0', textAlign: 'center', fontSize: 12, color: '#6b6b6b' }}>
+              선택한 분류의 카드가 없습니다
+            </div>
+          ) : (
+            filteredInventory.map((card, idx) => {
+              const isSelected = selectedAuctionCardId === card.id;
+              const isAbility = card.type === 'ability';
+              const value = getCardSellValue(card, inventory);
+              const fee = myPlayer.freeBankSell ? 0 : 10;
+              const canBankSell = !isAbility && value > 10;
+              const earnFromSell = canBankSell ? value - fee : 0;
 
-                return (
-                  <div
-                    key={card.id}
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}
-                  >
-                    <CardFace
-                      card={card}
-                      faceDown={false}
-                      selected={isSelected}
-                      showRealBadge={true}
-                      flightFrom={{ x: -140, y: -260 }}
-                      staggerIndex={idx}
-                      onClick={() => {
-                        if (isDealing) return;
-                        if (isAbility) {
-                          setAbilityCard(card);
-                        } else {
-                          setSelectedAuctionCardId(prev => prev === card.id ? null : card.id);
-                        }
-                      }}
-                    />
-                    {/* Sell button */}
-                    {isMyTurn && !isAbility && (
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        style={{ fontSize: 10, padding: '3px 8px' }}
-                        onClick={() => handleBankSell(card.id)}
-                        disabled={isDealing || !canBankSell}
-                        title={canBankSell ? `은행에 $${earnFromSell} 판매` : '수수료 후 판매 불가'}
-                      >
-                        판매 ${earnFromSell > 0 ? earnFromSell : '×'}
-                      </button>
-                    )}
-                    {/* Ability use badge */}
-                    {isAbility && (
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        style={{ fontSize: 10, padding: '3px 8px', color: '#141414' }}
-                        onClick={() => !isDealing && setAbilityCard(card)}
-                        disabled={isDealing}
-                      >
-                        능력 사용
-                      </button>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
+              return (
+                <div
+                  key={card.id}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}
+                >
+                  <CardFace
+                    card={card}
+                    faceDown={false}
+                    selected={isSelected}
+                    showRealBadge={true}
+                    flightFrom={{ x: 200, y: -240 }} // Fly from central deck object position
+                    staggerIndex={idx}
+                    onClick={() => {
+                      if (isDealing) return;
+                      if (isAbility) {
+                        setAbilityCard(card);
+                      } else {
+                        setSelectedAuctionCardId(prev => prev === card.id ? null : card.id);
+                      }
+                    }}
+                  />
+                  {/* Sell button */}
+                  {isMyTurn && !isAbility && (
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      style={{ fontSize: 10, padding: '3px 8px', background: '#ffffff', border: '1px solid #141414' }}
+                      onClick={() => handleBankSell(card.id)}
+                      disabled={isDealing || !canBankSell}
+                      title={canBankSell ? `은행에 $${earnFromSell} 판매` : '수수료 후 판매 불가'}
+                    >
+                      판매 ${earnFromSell > 0 ? earnFromSell : '×'}
+                    </button>
+                  )}
+                  {/* Ability use badge */}
+                  {isAbility && (
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      style={{ fontSize: 10, padding: '3px 8px', color: '#141414', background: '#FFF5E2', border: '1px solid #141414', fontWeight: 800 }}
+                      onClick={() => !isDealing && setAbilityCard(card)}
+                      disabled={isDealing}
+                    >
+                      능력 사용
+                    </button>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </>
