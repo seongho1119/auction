@@ -33,9 +33,13 @@ export function CardFace({ card, size = 'md', selected, showRealBadge, faceDown,
 
   const SvgComp = CARD_SVG_MAP[card.id] || (isAbility ? IconLightning : IconVase);
   const iconColor = isAbility ? "var(--secondary)" : (card.isSet ? "var(--primary-dark)" : "var(--text-primary)");
+  
+  // Price display: if isReal is known, show exact price. If unrevealed (e.g. auction), show both Real / Fake values!
   const priceDisplay = isAbility
     ? null
-    : (card.isReal !== undefined ? `$${card.isReal ? card.realPrice : card.fakePrice}` : `$?`);
+    : (card.isReal !== undefined
+        ? `$${card.isReal ? card.realPrice : card.fakePrice}`
+        : `$${card.realPrice ?? '?'} / $${card.fakePrice ?? '?'}`);
 
   return (
     <div
@@ -45,9 +49,9 @@ export function CardFace({ card, size = 'md', selected, showRealBadge, faceDown,
     >
       <div className={`card-face ${isAbility ? 'ability-face' : 'item-face'}`}>
         {/* Real/Fake badge */}
-        {showRealBadge && card.isReal !== undefined && (
-          <div className={`card-real-badge ${card.isReal ? 'badge-real' : 'badge-fake'}`}>
-            {card.isReal ? '진' : '가'}
+        {showRealBadge && (
+          <div className={`card-real-badge ${card.isReal === true ? 'badge-real' : card.isReal === false ? 'badge-fake' : 'badge-unrevealed'}`}>
+            {card.isReal === true ? '진' : card.isReal === false ? '가' : '?'}
           </div>
         )}
 

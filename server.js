@@ -63,21 +63,27 @@ function broadcastState(roomId) {
   const room = rooms[roomId];
   if (!room || !room.state) return;
 
-  for (const p of room.state.players) {
-    const playerSocket = io.sockets.sockets.get(p.id);
-    if (playerSocket) {
-      const clientState = getClientState(room.state, p.id);
-      playerSocket.emit('game:state', clientState);
+  const roomSockets = io.sockets.adapter.rooms.get(roomId);
+  if (!roomSockets) return;
+
+  for (const socketId of roomSockets) {
+    const s = io.sockets.sockets.get(socketId);
+    if (!s) continue;
+
+    // Match player in room.state.players by socket.id or by name from room.players
+    let playerInRoom = room.players.find(p => p.id === socketId);
+    let statePlayer = room.state.players.find(p => p.id === socketId || (playerInRoom && p.name === playerInRoom.name));
+
+    if (statePlayer) {
+      // Keep state player socket id updated in case of reconnection
+      statePlayer.id = socketId;
+      const clientState = getClientState(room.state, statePlayer.id);
+      s.emit('game:state', clientState);
+    } else {
+      const fallbackState = getClientState(room.state, room.state.players[0]?.id);
+      s.emit('game:state', fallbackState);
     }
   }
-
-  io.to(roomId).except(...room.state.players.map(p => p.id)).emit('game:state', {
-    players: room.state.players.map(p => ({ id: p.id, name: p.name, money: p.money, inventoryCount: p.inventory.length })),
-    phase: room.state.phase,
-    turnIndex: room.state.turnIndex,
-    roundIndex: room.state.roundIndex,
-    log: room.state.log,
-  });
 }
 
 function broadcastLobby(roomId) {

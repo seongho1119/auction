@@ -25,7 +25,7 @@ function getCardValue(card, inventory) {
   return card.isReal ? card.realPrice : card.fakePrice;
 }
 
-export function GameBoard({ gameState, myId, onError, onSuccess }) {
+export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
   const [bidAmount, setBidAmount] = useState(10);
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [abilityCard, setAbilityCard] = useState(null);
@@ -35,30 +35,41 @@ export function GameBoard({ gameState, myId, onError, onSuccess }) {
   const [showRoundBanner, setShowRoundBanner] = useState(null);
 
   const { players = [], turnIndex, auction, trade, log = [], turnActions = {}, roundIndex = 0 } = gameState || {};
-  const me = players.find(p => p.id === myId);
-  const opponents = players.filter(p => p.id !== myId);
-  const currentPlayer = players[turnIndex];
-  const isMyTurn = currentPlayer?.id === myId;
 
-  // Board entry animation
+  // Reliable player matching (by socket ID or by player Name fallback)
+  const me = players.find(p => p.id === myId) || (playerName ? players.find(p => p.name === playerName) : null) || players[0];
+  const opponents = me ? players.filter(p => p.id !== me.id) : players;
+  const currentPlayer = players[turnIndex];
+  const isMyTurn = currentPlayer?.id === me?.id;
+
+  // Synced deck counts across all players
+  const totalDeckCount = gameState.deckCount ?? gameState.deck?.length ?? 0;
+  const itemCardsInDeck = gameState.deckItemCount ?? gameState.deck?.filter?.(c => c?.type === 'item')?.length ?? 0;
+
+  // Board entry & Card Dealing GSAP Animation
   useEffect(() => {
     if (!boardRef.current) return;
     gsap.from('.board-top', { y: -20, opacity: 0, duration: 0.6, ease: 'power3.out' });
     gsap.from('.auction-zone', { scale: 0.96, opacity: 0, duration: 0.6, ease: 'power3.out', delay: 0.15 });
     gsap.from('.my-panel', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out', delay: 0.2 });
-  }, []); // eslint-disable-line
+  }, []);
 
-  // Round change banner
+  // Card dealing animation when round advances
   useEffect(() => {
     if (prevRoundRef.current !== null && roundIndex > prevRoundRef.current) {
       setShowRoundBanner(roundIndex);
+      // Trigger fly-out card deal animation
+      gsap.fromTo('.poker-card-fly', 
+        { scale: 0.2, x: 0, y: 0, opacity: 1 },
+        { scale: 1, y: 140, opacity: 0, duration: 0.8, stagger: 0.15, ease: 'power2.out' }
+      );
       setTimeout(() => setShowRoundBanner(null), 2500);
     }
     prevRoundRef.current = roundIndex;
   }, [roundIndex]);
 
-  const needsTradeResponse = trade?.active && trade?.status === 'pending' && trade?.targetId === myId;
-  const isThirdParty = trade?.active && trade?.proposerId !== myId && trade?.targetId !== myId;
+  const needsTradeResponse = trade?.active && trade?.status === 'pending' && trade?.targetId === me?.id;
+  const isThirdParty = trade?.active && trade?.proposerId !== me?.id && trade?.targetId !== me?.id;
   const tradeNames = isThirdParty ? {
     proposer: players.find(p => p.id === trade.proposerId)?.name,
     target: players.find(p => p.id === trade.targetId)?.name,
@@ -116,8 +127,6 @@ export function GameBoard({ gameState, myId, onError, onSuccess }) {
     </div>
   );
 
-  const itemCardsInDeck = gameState.deck?.filter?.(c => c?.type === 'item')?.length ?? '?';
-
   return (
     <div className="board-root" ref={boardRef}>
       {/* ── TOP: Opponents ── */}
@@ -146,17 +155,17 @@ export function GameBoard({ gameState, myId, onError, onSuccess }) {
         })}
       </div>
 
-      {/* ── MIDDLE: 3-column ── */}
+      {/* ── MIDDLE: 3-column Poker Felt Surface ── */}
       <div className="board-middle">
-        {/* Col 1: Auction Zone */}
+        {/* Col 1: Auction & Center Deck Zone */}
         <div className={`auction-zone${auction?.active ? ' live' : ''}`}>
           <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className={`auction-zone-label${auction?.active ? ' live-label' : ''}`}>
-              {auction?.active ? '경매 진행 중' : '경매'}
+              {auction?.active ? '경매 진행 중' : '경매 보드'}
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <div className="deck-pill">
-                <span className="deck-count">{gameState.deck?.length ?? 0}</span>
+                <span className="deck-count">{totalDeckCount}</span>
                 <span className="deck-label">덱</span>
               </div>
               <div className="round-badge">R{roundIndex + 1}</div>

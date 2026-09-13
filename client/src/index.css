@@ -620,14 +620,18 @@ body {
   padding: 2px 7px;
 }
 
-/* Board Middle */
+/* Board Middle (Poker Felt Surface: #44A32A felt + #97ECB9 border) */
 .board-middle {
   display: grid;
   grid-template-columns: 1fr 280px 220px;
-  gap: 10px;
-  padding: 10px;
+  gap: 12px;
+  padding: 14px;
   overflow: hidden;
   min-height: 0;
+  background: radial-gradient(ellipse at center, #3ea524 0%, #44A32A 65%, #2a7319 100%);
+  border: 3.5px solid #97ECB9;
+  border-radius: var(--r-xl);
+  box-shadow: inset 0 2px 14px rgba(0,0,0,0.2), 0 10px 30px rgba(20,20,20,0.12);
 }
 
 @media (max-width: 1000px) {
@@ -643,17 +647,18 @@ body {
   align-items: center;
   gap: 16px;
   padding: 24px;
-  border: 1px solid var(--border-1);
-  border-radius: var(--r-xl);
-  background: #ffffff;
+  border: 2px solid rgba(151, 236, 185, 0.4);
+  border-radius: var(--r-lg);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(6px);
   box-shadow: var(--shadow-sm);
   overflow-y: auto;
   transition: border-color 300ms ease, box-shadow 300ms ease;
 }
 
 .auction-zone.live {
-  border-color: var(--gold);
-  box-shadow: var(--shadow-gold);
+  border-color: #97ECB9;
+  box-shadow: 0 0 24px rgba(151, 236, 185, 0.4);
 }
 
 .auction-zone-label {
@@ -925,6 +930,16 @@ body {
   border-radius: var(--r-full);
 }
 
+.badge-unrevealed {
+  background: rgba(20, 20, 20, 0.08);
+  color: var(--text-muted);
+  border: 1px solid var(--border-1);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--r-full);
+}
+
 .card-actions {
   display: flex;
   gap: 4px;
@@ -960,29 +975,36 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-/* Modal overlays (White Theme) */
+/* Modal overlays (Solid Background Fix) */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(13, 13, 17, 0.4);
+  background: rgba(20, 20, 20, 0.65) !important;
   backdrop-filter: blur(8px);
-  z-index: 100;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
 }
 
-.modal-card {
+.trade-modal, .modal-card, .bezel-outer {
   width: 100%;
-  max-width: 500px;
-  background: #ffffff;
-  border: 1px solid var(--border-1);
+  max-width: 580px;
+  background: #ffffff !important;
+  border: 2.5px solid #44A32A !important;
   border-radius: var(--r-xl);
-  padding: 28px;
-  box-shadow: var(--shadow-lg);
-  max-height: 85dvh;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35) !important;
+  max-height: 88dvh;
   overflow-y: auto;
+  color: #141414 !important;
+  opacity: 1 !important;
+}
+
+.bezel-inner {
+  background: #ffffff !important;
+  color: #141414 !important;
 }
 
 .modal-title {

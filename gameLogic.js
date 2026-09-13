@@ -525,6 +525,14 @@ function getClientState(state, viewerId) {
   const cs = deepClone(state);
   const viewer = cs.players.find(p => p.id === viewerId);
 
+  // Deck counts for all players
+  cs.deckCount = state.deck.length;
+  cs.deckItemCount = state.deck.filter(c => c.type === 'item').length;
+
+  // Sanitize deck array to avoid leaking future secret cards in DevTools
+  cs.deck = state.deck.map(c => ({ id: c.id, type: c.type }));
+
+  // Sanitize player inventories (hide isReal of opponents' cards unless revealed)
   for (const p of cs.players) {
     for (const c of p.inventory) {
       if (p.id === viewerId) continue;
@@ -533,12 +541,13 @@ function getClientState(state, viewerId) {
     }
   }
 
-  if (cs.auction.card) {
+  // Sanitize auction card (keep name, prices, icon; hide only isReal unless revealed)
+  if (cs.auction?.card) {
     const revealed = viewer?.revealedCards?.includes(cs.auction.card.id);
     if (!revealed) delete cs.auction.card.isReal;
   }
 
-  if (cs.trade.active) {
+  if (cs.trade?.active) {
     const isParticipant = (cs.trade.proposerId === viewerId || cs.trade.targetId === viewerId);
     if (!isParticipant) {
       cs.trade.offer = { cards: [], money: '?' };

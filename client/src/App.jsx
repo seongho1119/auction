@@ -180,6 +180,7 @@ export default function App() {
         <GameBoard
           gameState={gameState}
           myId={myId}
+          playerName={playerName}
           onError={onError}
           onSuccess={onSuccess}
         />
