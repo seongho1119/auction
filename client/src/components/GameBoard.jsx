@@ -1,11 +1,11 @@
-// ============================================================
-// GameBoard.jsx — 메인 게임 보드 (Premium Redesign)
-// ==================================================import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { socket } from '../socket';
 import { CardFace, MiniCard } from './Card';
 import { CenterDeck3D } from './CenterDeck3D';
 import { ActionPanel } from './ActionPanel';
+import { OpponentSeat } from './OpponentSeat';
+import { ActionVisualNotifier } from './ActionVisualNotifier';
 import { TradeProposalModal, TradeResponseModal } from './TradeModal';
 import { AbilityModal } from './AbilityModal';
 import { IconCrown, IconUser, IconMask, IconGem, IconHammer } from './SvgIcons';
@@ -30,7 +30,6 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
   const isMyTurn = currentPlayer?.id === me?.id;
 
   const totalDeckCount = gameState.deckCount ?? gameState.deck?.length ?? 0;
-  const itemCardsInDeck = gameState.deckItemCount ?? gameState.deck?.filter?.(c => c?.type === 'item')?.length ?? 0;
 
   useEffect(() => {
     const handleReveal = (data) => {
@@ -84,7 +83,6 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
   };
 
   const oppCount = opponents.length;
-  const topClass = `board-top players-${Math.min(oppCount + 1, 4)}`;
 
   if (!me) return (
     <div className="loading-screen">
@@ -94,29 +92,32 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
   );
 
   return (
-    <div className="board-root" ref={boardRef}>
-      {/* ── TOP: Opponents ── */}
-      <div className={topClass}>
-        {opponents.map((opp) => {
+    <div className="board-root" ref={boardRef} style={{ position: 'relative' }}>
+      {/* Visual Action Notifier (Toasts & Floating Money) */}
+      <ActionVisualNotifier gameState={gameState} myId={myId} />
+
+      {/* ── TOP: Hangame Poker Style Opponent Seats (with Face-down Hand Displays) ── */}
+      <div
+        className="board-top"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-around',
+          alignItems: 'center',
+          padding: '12px 24px',
+          background: '#FFF5E2',
+          borderBottom: '2px solid #141414',
+        }}
+      >
+        {opponents.map((opp, idx) => {
           const pi = players.findIndex(p => p.id === opp.id);
           const active = opp.id === currentPlayer?.id;
           return (
-            <div key={opp.id} className={`opp-panel${active ? ' active' : ''}`}>
-              {active && <div className="turn-pip">턴</div>}
-              <div className="opp-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {(() => {
-                  const IconComp = PLAYER_ICONS[pi % PLAYER_ICONS.length] || IconUser;
-                  return <IconComp className="w-5 h-5" color="var(--text-primary)" />;
-                })()}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="opp-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opp.name}</div>
-                <div className="opp-money">${opp.money}</div>
-              </div>
-              <div className="opp-card-count">
-                {typeof opp.inventoryCount === 'number' ? opp.inventoryCount : opp.inventory?.length ?? 0}장
-              </div>
-            </div>
+            <OpponentSeat
+              key={opp.id}
+              player={opp}
+              playerIndex={pi}
+              isActive={active}
+            />
           );
         })}
       </div>
