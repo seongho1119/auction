@@ -1,52 +1,45 @@
 // ============================================================
 // GameBoard.jsx — 메인 게임 보드 (Premium Redesign)
-// ============================================================
-
-import { useState, useEffect, useRef } from 'react';
+// ==================================================import { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { socket } from '../socket';
 import { CardFace, MiniCard } from './Card';
-import { EventLog } from './EventLog';
+import { CenterDeck3D } from './CenterDeck3D';
+import { ActionPanel } from './ActionPanel';
 import { TradeProposalModal, TradeResponseModal } from './TradeModal';
 import { AbilityModal } from './AbilityModal';
 import { IconCrown, IconUser, IconMask, IconGem, IconHammer } from './SvgIcons';
 
 const PLAYER_ICONS = [IconCrown, IconUser, IconMask, IconGem];
-const SET_VALUE_TABLE = { 0: 80, 1: 60, 2: 45, 3: 30 };
-
-function getCardValue(card, inventory) {
-  if (!card || card.type === 'ability') return 0;
-  if (card.isSet) {
-    const owned = inventory.filter(c => c.isSet);
-    if (owned.length < 3) return card.isReal ? card.realPrice : card.fakePrice;
-    const fakeCount = owned.filter(c => !c.isReal).length;
-    return SET_VALUE_TABLE[Math.min(fakeCount, 3)];
-  }
-  return card.isReal ? card.realPrice : card.fakePrice;
-}
 
 export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
   const [bidAmount, setBidAmount] = useState(10);
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [abilityCard, setAbilityCard] = useState(null);
   const [selectedCardId, setSelectedCardId] = useState(null);
+  const [revealModal, setRevealModal] = useState(null);
   const boardRef = useRef(null);
   const prevRoundRef = useRef(null);
   const [showRoundBanner, setShowRoundBanner] = useState(null);
 
   const { players = [], turnIndex, auction, trade, log = [], turnActions = {}, roundIndex = 0 } = gameState || {};
 
-  // Reliable player matching (by socket ID or by player Name fallback)
   const me = players.find(p => p.id === myId) || (playerName ? players.find(p => p.name === playerName) : null) || players[0];
   const opponents = me ? players.filter(p => p.id !== me.id) : players;
   const currentPlayer = players[turnIndex];
   const isMyTurn = currentPlayer?.id === me?.id;
 
-  // Synced deck counts across all players
   const totalDeckCount = gameState.deckCount ?? gameState.deck?.length ?? 0;
   const itemCardsInDeck = gameState.deckItemCount ?? gameState.deck?.filter?.(c => c?.type === 'item')?.length ?? 0;
 
-  // Board entry & Card Dealing GSAP Animation
+  useEffect(() => {
+    const handleReveal = (data) => {
+      setRevealModal(data);
+    };
+    socket.on('ability:reveal', handleReveal);
+    return () => socket.off('ability:reveal', handleReveal);
+  }, []);
+
   useEffect(() => {
     if (!boardRef.current) return;
     gsap.from('.board-top', { y: -20, opacity: 0, duration: 0.6, ease: 'power3.out' });
@@ -54,15 +47,9 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
     gsap.from('.my-panel', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out', delay: 0.2 });
   }, []);
 
-  // Card dealing animation when round advances
   useEffect(() => {
     if (prevRoundRef.current !== null && roundIndex > prevRoundRef.current) {
       setShowRoundBanner(roundIndex);
-      // Trigger fly-out card deal animation
-      gsap.fromTo('.poker-card-fly', 
-        { scale: 0.2, x: 0, y: 0, opacity: 1 },
-        { scale: 1, y: 140, opacity: 0, duration: 0.8, stagger: 0.15, ease: 'power2.out' }
-      );
       setTimeout(() => setShowRoundBanner(null), 2500);
     }
     prevRoundRef.current = roundIndex;
@@ -89,31 +76,10 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
     });
   };
 
-  const handleStartAuction = () => {
-    if (!selectedCardId) { onError?.('경매에 올릴 카드를 선택하세요'); return; }
-    socket.emit('auction:start', { cardId: selectedCardId }, res => {
-      if (!res?.success) onError?.(res?.error);
-      else { onSuccess?.('경매 시작!'); setSelectedCardId(null); }
-    });
-  };
-
   const handleDeckDraw = () => {
     socket.emit('deck:draw', {}, res => {
       if (!res?.success) onError?.(res?.error);
       else onSuccess?.('카드를 뽑았습니다!');
-    });
-  };
-
-  const handleBankSell = (cardId) => {
-    socket.emit('bank:sell', { cardId }, res => {
-      if (!res?.success) onError?.(res?.error);
-      else onSuccess?.('은행 판매 완료');
-    });
-  };
-
-  const handleEndTurn = () => {
-    socket.emit('turn:end', {}, res => {
-      if (!res?.success) onError?.(res?.error);
     });
   };
 
@@ -155,27 +121,21 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
         })}
       </div>
 
-      {/* ── MIDDLE: 3-column Poker Felt Surface ── */}
-      <div className="board-middle">
-        {/* Col 1: Auction & Center Deck Zone */}
+      {/* ── MIDDLE: 2-column Spacious Poker Felt Surface (No EventLog / No Status Box) ── */}
+      <div className="board-middle" style={{ gridTemplateColumns: '1fr 340px' }}>
+        {/* Col 1: Auction Zone */}
         <div className={`auction-zone${auction?.active ? ' live' : ''}`}>
           <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className={`auction-zone-label${auction?.active ? ' live-label' : ''}`}>
               {auction?.active ? '경매 진행 중' : '경매 보드'}
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <div className="deck-pill">
-                <span className="deck-count">{totalDeckCount}</span>
-                <span className="deck-label">덱</span>
-              </div>
-              <div className="round-badge">R{roundIndex + 1}</div>
-            </div>
+            <div className="round-badge">R{roundIndex + 1}</div>
           </div>
 
           {auction?.active && auction.card ? (
             <>
               {/* Auction card display */}
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: 'relative', margin: '12px 0' }}>
                 <CardFace
                   card={auction.card}
                   size="lg"
@@ -183,8 +143,8 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
                 />
                 {auction.highestBidderId && (
                   <div style={{ position: 'absolute', top: -8, right: -8 }}>
-                    <div className="tag tag-gold animate-glow" style={{ fontSize: 11, padding: '4px 10px' }}>
-                      ${ auction.currentBid}
+                    <div className="tag tag-gold animate-glow" style={{ fontSize: 11, padding: '4px 10px', background: '#141414', color: '#ffffff' }}>
+                      ${auction.currentBid}
                     </div>
                   </div>
                 )}
@@ -206,7 +166,7 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
                 </div>
               )}
 
-              {/* Bid controls (for non-sellers) */}
+              {/* Bid controls */}
               {auction.sellerId !== myId && (
                 <div className="bid-controls">
                   <input
@@ -223,178 +183,40 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
                 </div>
               )}
 
-              {/* Close auction (seller, my turn) */}
+              {/* Close auction */}
               {auction.sellerId === myId && isMyTurn && (
-                <button className="btn btn-emerald btn-sm" onClick={handleCloseAuction}>
+                <button className="btn btn-primary btn-sm" onClick={handleCloseAuction}>
                   낙찰 종료
                 </button>
               )}
-
-              {/* Item cards in deck indicator */}
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                물건 카드 잔여: {itemCardsInDeck}장
-              </div>
             </>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: 0.5 }}>
-              <IconHammer className="w-10 h-10" color="var(--text-muted)" />
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>경매 대기 중</div>
-            </div>
-          )}
-
-          {/* My turn quick actions */}
-          {isMyTurn && !auction?.active && (
-            <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-              <button
-                className="btn btn-ghost btn-sm"
-                style={{ flex: 1, fontSize: 11 }}
-                onClick={handleDeckDraw}
-                disabled={!gameState.deck?.length || me.money < 20}
-                title="$20을 내고 덱에서 카드를 뽑습니다"
-              >
-                뽑기 $20
-              </button>
-              <button
-                className="btn btn-secondary btn-sm"
-                style={{ flex: 1, fontSize: 11 }}
-                onClick={() => setShowTradeModal(true)}
-                disabled={turnActions.tradeCount >= 2 || trade?.active}
-                title={`거래 (${turnActions.tradeCount ?? 0}/2회)`}
-              >
-                거래 {turnActions.tradeCount ?? 0}/2
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 8, opacity: 0.6 }}>
+              <IconHammer className="w-10 h-10" color="#ffffff" />
+              <div style={{ fontSize: 13, color: '#ffffff', fontWeight: 700 }}>경매 대기 중</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>내 턴에 손패 카드를 선택하여 경매에 부칠 수 있습니다</div>
             </div>
           )}
         </div>
 
-        {/* Col 2: Event Log */}
-        <EventLog logs={log} />
-
-        {/* Col 3: Status Panel */}
-        <div className="status-panel">
-          <div className="status-label">현황</div>
-
-          <div className={`status-item${isMyTurn ? ' highlight' : ''}`}>
-            <div className="status-item-label">현재 턴</div>
-            <div className={`status-item-value${isMyTurn ? ' gold' : ''}`}>
-              {currentPlayer?.name}
-              {isMyTurn && <span className="tag tag-gold" style={{ marginLeft: 6, fontSize: 8 }}>내 턴</span>}
-            </div>
-          </div>
-
-          <div className="status-item">
-            <div className="status-item-label">라운드</div>
-            <div className="status-item-value violet">R{roundIndex + 1}</div>
-          </div>
-
-          <div className="status-item">
-            <div className="status-item-label">남은 물건 카드</div>
-            <div className="status-item-value">{itemCardsInDeck}장</div>
-          </div>
-
-          {isMyTurn && (
-            <div className="status-item">
-              <div className="status-item-label">이번 턴 행동</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-                <div className="action-row">
-                  <div className={`action-check${turnActions.auctionUsed ? ' done' : ''}`}>
-                    {turnActions.auctionUsed ? '✓' : ''}
-                  </div>
-                  <span style={{ fontSize: 12 }}>경매</span>
-                </div>
-                <div className="action-row">
-                  <div className={`action-check${(turnActions.tradeCount ?? 0) >= 2 ? ' done' : ''}`}>
-                    {turnActions.tradeCount ?? 0}/2
-                  </div>
-                  <span style={{ fontSize: 12 }}>거래</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {isMyTurn && (
-            <button className="btn btn-danger btn-sm w-full" style={{ marginTop: 'auto' }} onClick={handleEndTurn}>
-              턴 종료
-            </button>
-          )}
-        </div>
+        {/* Col 2: Center Physical 3D Deck Object with Shuffle Animation */}
+        <CenterDeck3D
+          count={totalDeckCount}
+          onDraw={handleDeckDraw}
+          disabled={!gameState.deck?.length || me.money < 20}
+          isMyTurn={isMyTurn}
+        />
       </div>
 
-      {/* ── BOTTOM: My Panel ── */}
-      <div className="my-panel">
-        <div className="my-info-block">
-          <div className="my-name">{me.name}</div>
-          <div className="my-money">${me.money}</div>
-          {isMyTurn && <div className="my-turn-chip">내 턴</div>}
-          {me.freeBankSell && <div className="tag tag-emerald" style={{ marginTop: 2 }}>수수료 면제</div>}
-        </div>
+      {/* ── BOTTOM: My Action Panel (Horizontal Hand Layout) ── */}
+      <ActionPanel
+        gameState={gameState}
+        myId={myId}
+        onError={onError}
+        onSuccess={onSuccess}
+      />
 
-        {/* Inventory */}
-        <div className="my-inventory">
-          {me.inventory?.length === 0 ? (
-            <div style={{ color: 'var(--text-muted)', fontSize: 12, display: 'flex', alignItems: 'center', padding: '0 12px' }}>
-              카드 없음
-            </div>
-          ) : (
-            me.inventory?.map(card => {
-              const isAbility = card.type === 'ability';
-              const value = getCardValue(card, me.inventory);
-              const fee = me.freeBankSell ? 0 : 10;
-              const canSell = !isAbility && value > fee;
-              const earn = canSell ? value - fee : 0;
-
-              return (
-                <div key={card.id} className="card-wrap">
-                  <CardFace
-                    card={card}
-                    size="sm"
-                    selected={selectedCardId === card.id}
-                    showRealBadge={true}
-                    onClick={() => {
-                      if (isAbility) setAbilityCard(card);
-                      else setSelectedCardId(p => p === card.id ? null : card.id);
-                    }}
-                  />
-                  {isMyTurn && !isAbility && (
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      style={{ fontSize: 9.5, padding: '3px 8px', lineHeight: 1 }}
-                      disabled={!canSell}
-                      onClick={() => handleBankSell(card.id)}
-                      title={canSell ? `은행 판매 $${earn}` : '판매 불가'}
-                    >
-                      {canSell ? `$${earn}` : '×'}
-                    </button>
-                  )}
-                  {isAbility && (
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      style={{ fontSize: 9.5, padding: '3px 8px', color: 'var(--violet)', lineHeight: 1 }}
-                      onClick={() => setAbilityCard(card)}
-                    >
-                      사용
-                    </button>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {/* Quick auction button */}
-        {isMyTurn && selectedCardId && (
-          <button
-            className="btn btn-primary btn-sm"
-            style={{ flexShrink: 0 }}
-            onClick={handleStartAuction}
-            disabled={turnActions.auctionUsed || auction?.active}
-          >
-            경매 올리기
-          </button>
-        )}
-      </div>
-
-      {/* ── Modals ── */}
+      {/* ── Modals & Notifications ── */}
       {showTradeModal && (
         <TradeProposalModal
           gameState={gameState}
@@ -426,7 +248,49 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
         />
       )}
 
-      {/* Third-party trade banner */}
+      {/* ── Truth Reveal Modal (Crisp Solid Background) ── */}
+      {revealModal && (
+        <div className="modal-overlay" onClick={() => setRevealModal(null)}>
+          <div
+            style={{
+              background: '#FFF5E2',
+              border: '3px solid #141414',
+              borderRadius: 'var(--r-xl)',
+              padding: '28px 32px',
+              textAlign: 'center',
+              width: 340,
+              boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+              position: 'relative',
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.15em', color: '#6b6b6b', marginBottom: 8, textTransform: 'uppercase' }}>
+              진위 확인 결과
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: '#141414', marginBottom: 16 }}>
+              {revealModal.cardName}
+            </div>
+            <div
+              style={{
+                fontSize: 24,
+                fontWeight: 900,
+                padding: '12px 20px',
+                borderRadius: 'var(--r-md)',
+                background: revealModal.isReal ? '#FFF5E2' : 'rgba(225, 71, 49, 0.15)',
+                color: revealModal.isReal ? '#141414' : '#E14731',
+                border: '2px solid #141414',
+                marginBottom: 20,
+              }}
+            >
+              {revealModal.isReal ? '진품 (REAL)' : '가품 (FAKE)'}
+            </div>
+            <button className="btn btn-primary btn-sm w-full" onClick={() => setRevealModal(null)}>
+              확인 완료
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Third-party trade notification */}
       {isThirdParty && tradeNames && (
         <div className="trade-notif">
           {tradeNames.proposer}과(와) {tradeNames.target}이(가) 거래 중
