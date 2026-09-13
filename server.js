@@ -29,6 +29,10 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
+  pingTimeout: 30000,
+  pingInterval: 10000,
+  transports: ['polling', 'websocket'],
+  allowEIO3: true,
 });
 
 app.use(express.static(path.join(__dirname, 'client', 'dist')));
@@ -312,7 +316,7 @@ io.on('connection', (socket) => {
         room.players.splice(idx, 1);
         io.to(roomId).emit('player:left', { name, id: socket.id });
         if (room.state) {
-          room.state.log.push(`⚠️ ${name}이(가) 게임을 떠났습니다.`);
+          room.state.log.push(`[퇴장] ${name}이(가) 게임을 떠났습니다.`);
           broadcastState(roomId);
         } else {
           broadcastLobby(roomId);

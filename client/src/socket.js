@@ -5,6 +5,12 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? 'h
 
 export const socket = io(SERVER_URL, {
   autoConnect: false,
+  transports: ['polling', 'websocket'],
+  reconnection: true,
+  reconnectionAttempts: 20,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 3000,
+  timeout: 20000,
 });
 
 export function connectSocket() {

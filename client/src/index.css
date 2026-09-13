@@ -251,24 +251,24 @@ body {
 .form-input {
   width: 100%;
   padding: 14px 18px;
-  background: var(--bg-void);
-  border: 1px solid var(--border-1);
+  background: #97ECB9;
+  border: 2px solid #44A32A;
   border-radius: var(--r-md);
-  color: var(--text-primary);
+  color: #141414;
   font-family: var(--font);
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 700;
   outline: none;
   transition: border-color 200ms ease, box-shadow 200ms ease;
 }
 
 .form-input:focus {
-  border-color: var(--gold-bright);
-  box-shadow: 0 0 0 3px var(--gold-dim);
-  background: #ffffff;
+  border-color: #44A32A;
+  box-shadow: 0 0 0 3px rgba(68, 163, 42, 0.25);
+  background: #97ECB9;
 }
 
-.form-input::placeholder { color: var(--text-muted); font-weight: 400; }
+.form-input::placeholder { color: #383838; font-weight: 500; opacity: 0.75; }
 
 /* Player count selector */
 .player-count-row {
@@ -280,10 +280,10 @@ body {
 
 .player-count-btn {
   padding: 12px;
-  background: var(--bg-void);
-  border: 1px solid var(--border-1);
+  background: #97ECB9;
+  border: 2px solid #44A32A;
   border-radius: var(--r-md);
-  color: var(--text-secondary);
+  color: #141414;
   font-family: var(--font);
   font-size: 14px;
   font-weight: 700;
@@ -292,10 +292,10 @@ body {
   text-align: center;
 }
 
-.player-count-btn:hover { border-color: var(--border-2); color: var(--text-primary); }
+.player-count-btn:hover { background: #84e4aa; border-color: #44A32A; color: #141414; }
 .player-count-btn.active {
-  background: var(--text-primary);
-  border-color: var(--text-primary);
+  background: #44A32A;
+  border-color: #44A32A;
   color: #ffffff;
   box-shadow: var(--shadow-sm);
 }
@@ -374,11 +374,12 @@ body {
 .btn-secondary:hover:not(:disabled) { background: #f8e8cb; }
 
 .btn-ghost {
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-0);
+  background: #97ECB9;
+  color: #141414;
+  border: 2px solid #44A32A;
+  font-weight: 700;
 }
-.btn-ghost:hover:not(:disabled) { background: var(--bg-surface); color: var(--text-primary); }
+.btn-ghost:hover:not(:disabled) { background: #84e4aa; border-color: #44A32A; color: #141414; }
 
 .btn-gold {
   background: var(--gold);

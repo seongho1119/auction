@@ -162,7 +162,7 @@ export function LobbyScreen({ onJoined }) {
               {/* Room Cards List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 340, overflowY: 'auto', paddingRight: 2, marginBottom: 20 }}>
                 {openRooms.length === 0 ? (
-                  <div style={{ padding: '32px 16px', textAlign: 'center', background: 'var(--bg-void)', border: '1px solid var(--border-1)', borderRadius: 'var(--r-md)', color: 'var(--text-muted)', fontSize: 13 }}>
+                  <div style={{ padding: '32px 16px', textAlign: 'center', background: '#97ECB9', border: '2px solid #44A32A', borderRadius: 'var(--r-md)', color: '#141414', fontSize: 14, fontWeight: 700 }}>
                     현재 열린 방이 없습니다.<br />새로운 방을 만들어보세요!
                   </div>
                 ) : (
@@ -174,18 +174,18 @@ export function LobbyScreen({ onJoined }) {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '14px 18px',
-                        background: 'var(--bg-void)',
-                        border: '1px solid var(--border-1)',
+                        background: '#97ECB9',
+                        border: '2px solid #44A32A',
                         borderRadius: 'var(--r-lg)',
                         transition: 'all 200ms ease',
                       }}
                     >
                       <div>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: '#141414', display: 'flex', alignItems: 'center', gap: 8 }}>
                           {r.roomName}
                           <span className="tag tag-gold" style={{ fontSize: 9 }}>{r.id}</span>
                         </div>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                        <div style={{ fontSize: 12, color: '#383838', fontWeight: 600, marginTop: 4 }}>
                           방장: {r.hostName} · 인원: {r.count}/{r.maxPlayers}명
                         </div>
                       </div>
@@ -197,7 +197,7 @@ export function LobbyScreen({ onJoined }) {
                           <span className="tag tag-rose">만석</span>
                         ) : (
                           <button
-                            className="btn btn-gold btn-sm"
+                            className="btn btn-primary btn-sm"
                             onClick={() => handleJoinRoom(r.id)}
                             disabled={loading}
                           >
