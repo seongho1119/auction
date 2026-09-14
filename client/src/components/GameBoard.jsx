@@ -6,7 +6,7 @@ import { CenterDeck3D } from './CenterDeck3D';
 import { ActionPanel } from './ActionPanel';
 import { OpponentSeat } from './OpponentSeat';
 import { ActionVisualNotifier } from './ActionVisualNotifier';
-import { TradeProposalModal, TradeResponseModal } from './TradeModal';
+import { TradeProposalModal, LiveTradeModal } from './TradeModal';
 import { AbilityModal } from './AbilityModal';
 import { IconCrown, IconUser, IconMask, IconGem, IconHammer } from './SvgIcons';
 
@@ -54,7 +54,7 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
     prevRoundRef.current = roundIndex;
   }, [roundIndex]);
 
-  const needsTradeResponse = trade?.active && trade?.status === 'pending' && trade?.targetId === me?.id;
+  const isTradeParticipant = trade?.active && (trade?.proposerId === me?.id || trade?.targetId === me?.id);
   const isThirdParty = trade?.active && trade?.proposerId !== me?.id && trade?.targetId !== me?.id;
   const tradeNames = isThirdParty ? {
     proposer: players.find(p => p.id === trade.proposerId)?.name,
@@ -239,10 +239,10 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
         />
       )}
 
-      {needsTradeResponse && (
-        <TradeResponseModal
+      {isTradeParticipant && (
+        <LiveTradeModal
           gameState={gameState}
-          myId={myId}
+          myId={me?.id}
           onClose={() => {}}
           onError={onError}
           onSuccess={onSuccess}

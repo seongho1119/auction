@@ -37,8 +37,12 @@ function createInitialGameState(players) {
       active: false,
       proposerId: null,
       targetId: null,
-      offer: { cards: [], money: 0 },
-      request: { cards: [], money: 0 },
+      proposerOffer: { cards: [], money: 0 },
+      targetOffer:   { cards: [], money: 0 },
+      proposerReady: false,
+      targetReady:   false,
+      demandMore:    false,
+      demandMoreBy:  null,
       status: 'idle',
     },
     turnIndex: 0,
@@ -263,81 +267,154 @@ function calcFinalAsset(player) {
 }
 
 // ── 거래 ──────────────────────────────────────────────────
-function proposeTrade(state, proposerId, targetId, offerCards, offerMoney, requestCards, requestMoney) {
+const EMPTY_TRADE = () => ({
+  active: false,
+  proposerId: null,
+  targetId: null,
+  proposerOffer: { cards: [], money: 0 },
+  targetOffer:   { cards: [], money: 0 },
+  proposerReady: false,
+  targetReady:   false,
+  demandMore:    false,
+  demandMoreBy:  null,
+  status: 'idle',
+});
+
+// 거래창 열기 (제안자가 상대를 선택)
+function openTrade(state, proposerId, targetId) {
   const newState = deepClone(state);
   const currentPlayer = getCurrentPlayer(newState);
 
-  if (currentPlayer.id !== proposerId) return { error: '자신의 턴에만 거래를 제안할 수 있습니다.' };
-  if (newState.turnActions.tradeCount >= 2) return { error: '이번 턴에 거래를 2회 이미 진행했습니다.' };
-  if (newState.turnActions.tradedWith.includes(targetId)) return { error: '이미 이 플레이어와 거래했습니다.' };
+  if (currentPlayer.id !== proposerId) return { error: '자신의 턴에만 거래를 시작할 수 있습니다.' };
+  if (newState.turnActions.tradedWith.includes(targetId)) return { error: '이미 이번 턴에 해당 상대와 거래했습니다.' };
   if (newState.trade.active) return { error: '이미 거래가 진행 중입니다.' };
 
   const proposer = newState.players.find(p => p.id === proposerId);
-  const target = newState.players.find(p => p.id === targetId);
+  const target   = newState.players.find(p => p.id === targetId);
   if (!target) return { error: '대상 플레이어를 찾을 수 없습니다.' };
-  if (proposer.money < offerMoney) return { error: '제시할 금액이 부족합니다.' };
-
-  for (const cid of offerCards) {
-    if (!proposer.inventory.find(c => c.id === cid)) return { error: `카드 ID ${cid}를 보유하고 있지 않습니다.` };
-  }
-  for (const cid of requestCards) {
-    if (!target.inventory.find(c => c.id === cid)) return { error: `상대가 카드 ID ${cid}를 보유하고 있지 않습니다.` };
-  }
 
   newState.trade = {
     active: true,
     proposerId,
     targetId,
-    offer: { cards: offerCards, money: offerMoney },
-    request: { cards: requestCards, money: requestMoney },
-    status: 'pending',
+    proposerOffer: { cards: [], money: 0 },
+    targetOffer:   { cards: [], money: 0 },
+    proposerReady: false,
+    targetReady:   false,
+    demandMore:    false,
+    demandMoreBy:  null,
+    status: 'open',
   };
 
-  newState.log.push(`[거래] ${proposer.name}이(가) ${target.name}에게 거래를 제안했습니다.`);
+  newState.log.push(`[거래] ${proposer.name}이(가) ${target.name}에게 거래를 시작했습니다.`);
   return newState;
 }
 
-function respondTrade(state, targetId, accepted) {
+// 오퍼 업데이트 (실시간)
+function updateOffer(state, playerId, cards, money) {
   const newState = deepClone(state);
   const trade = newState.trade;
-  if (!trade.active || trade.status !== 'pending') return { error: '진행 중인 거래 제안이 없습니다.' };
-  if (trade.targetId !== targetId) return { error: '거래 수락 권한이 없습니다.' };
+  if (!trade.active) return { error: '진행 중인 거래가 없습니다.' };
 
-  const proposer = newState.players.find(p => p.id === trade.proposerId);
-  const target = newState.players.find(p => p.id === trade.targetId);
+  const isProposer = trade.proposerId === playerId;
+  const isTarget   = trade.targetId   === playerId;
+  if (!isProposer && !isTarget) return { error: '거래 참여자가 아닙니다.' };
 
-  if (accepted) {
-    for (const cid of trade.offer.cards) {
+  const player = newState.players.find(p => p.id === playerId);
+  if (!player) return { error: '플레이어를 찾을 수 없습니다.' };
+  if (money > player.money) return { error: '잔액이 부족합니다.' };
+  for (const cid of cards) {
+    if (!player.inventory.find(c => c.id === cid)) return { error: `카드 ID ${cid}를 보유하고 있지 않습니다.` };
+  }
+
+  if (isProposer) {
+    newState.trade.proposerOffer = { cards, money };
+    newState.trade.proposerReady = false; // offer 바뀌면 ready 해제
+  } else {
+    newState.trade.targetOffer = { cards, money };
+    newState.trade.targetReady = false;
+  }
+  return newState;
+}
+
+// 준비 토글
+function readyTrade(state, playerId, ready) {
+  const newState = deepClone(state);
+  const trade = newState.trade;
+  if (!trade.active) return { error: '진행 중인 거래가 없습니다.' };
+
+  const isProposer = trade.proposerId === playerId;
+  const isTarget   = trade.targetId   === playerId;
+  if (!isProposer && !isTarget) return { error: '거래 참여자가 아닙니다.' };
+
+  if (isProposer) newState.trade.proposerReady = ready;
+  else            newState.trade.targetReady   = ready;
+
+  // 양쪽 모두 ready → 거래 성사
+  if (newState.trade.proposerReady && newState.trade.targetReady) {
+    const proposer = newState.players.find(p => p.id === trade.proposerId);
+    const target   = newState.players.find(p => p.id === trade.targetId);
+    const pOffer   = newState.trade.proposerOffer;
+    const tOffer   = newState.trade.targetOffer;
+
+    // 카드 교환
+    for (const cid of pOffer.cards) {
       const idx = proposer.inventory.findIndex(c => c.id === cid);
       if (idx !== -1) { const [card] = proposer.inventory.splice(idx, 1); target.inventory.push(card); }
     }
-    for (const cid of trade.request.cards) {
+    for (const cid of tOffer.cards) {
       const idx = target.inventory.findIndex(c => c.id === cid);
       if (idx !== -1) { const [card] = target.inventory.splice(idx, 1); proposer.inventory.push(card); }
     }
-    proposer.money -= trade.offer.money;
-    target.money += trade.offer.money;
-    target.money -= trade.request.money;
-    proposer.money += trade.request.money;
+    // 현금 교환
+    proposer.money -= pOffer.money;
+    target.money   += pOffer.money;
+    target.money   -= tOffer.money;
+    proposer.money += tOffer.money;
 
     newState.log.push(`[거래성사] ${proposer.name}과(와) ${target.name}의 거래가 성사되었습니다.`);
-    newState.turnActions.tradeCount += 1;
-    newState.turnActions.tradedWith.push(targetId);
-  } else {
-    newState.log.push(`[거래거절] ${target.name}이(가) 거래를 거절했습니다.`);
+    newState.turnActions.tradedWith.push(trade.targetId);
+    newState.trade = EMPTY_TRADE();
+    newState.trade.status = 'completed';
+    // status를 잠깐 completed로 설정 후 idle로
+    newState.trade = EMPTY_TRADE();
   }
 
-  newState.trade = { active: false, proposerId: null, targetId: null, offer: { cards: [], money: 0 }, request: { cards: [], money: 0 }, status: 'idle' };
   return newState;
 }
 
-function cancelTrade(state, proposerId) {
+// 더 큰 제안 요청 (▲)
+function demandMoreTrade(state, playerId) {
   const newState = deepClone(state);
-  if (!newState.trade.active || newState.trade.proposerId !== proposerId) return { error: '취소할 수 없습니다.' };
-  const proposer = newState.players.find(p => p.id === proposerId);
-  newState.log.push(`[거래취소] ${proposer.name}이(가) 거래를 취소했습니다.`);
-  newState.trade = { active: false, proposerId: null, targetId: null, offer: { cards: [], money: 0 }, request: { cards: [], money: 0 }, status: 'idle' };
+  const trade = newState.trade;
+  if (!trade.active) return { error: '진행 중인 거래가 없습니다.' };
+  newState.trade.demandMore   = true;
+  newState.trade.demandMoreBy = playerId;
   return newState;
+}
+
+// 거래 취소
+function cancelTrade(state, playerId) {
+  const newState = deepClone(state);
+  if (!newState.trade.active) return { error: '진행 중인 거래가 없습니다.' };
+  const isParticipant = newState.trade.proposerId === playerId || newState.trade.targetId === playerId;
+  if (!isParticipant) return { error: '거래 참여자가 아닙니다.' };
+  const player = newState.players.find(p => p.id === playerId);
+  newState.log.push(`[거래취소] ${player.name}이(가) 거래를 취소했습니다.`);
+  newState.trade = EMPTY_TRADE();
+  return newState;
+}
+
+// 하위호환 — proposeTrade는 openTrade 래퍼로 유지
+function proposeTrade(state, proposerId, targetId) {
+  return openTrade(state, proposerId, targetId);
+}
+
+function respondTrade(state, targetId, accepted) {
+  // 구형 one-shot 거래 응답 — 새 시스템에선 readyTrade가 담당
+  // 하위 호환을 위해 남겨둠
+  if (!accepted) return cancelTrade(state, targetId);
+  return readyTrade(state, targetId, true);
 }
 
 // ── 능력 카드 사용 ────────────────────────────────────────
@@ -550,8 +627,18 @@ function getClientState(state, viewerId) {
   if (cs.trade?.active) {
     const isParticipant = (cs.trade.proposerId === viewerId || cs.trade.targetId === viewerId);
     if (!isParticipant) {
-      cs.trade.offer = { cards: [], money: '?' };
-      cs.trade.request = { cards: [], money: '?' };
+      // 제3자에게는 거래 내용 숨김
+      cs.trade.proposerOffer = { cards: [], money: '?' };
+      cs.trade.targetOffer   = { cards: [], money: '?' };
+    }
+    // 상대 오퍼의 카드 isReal 숨김 (이름/타입만 보임)
+    const isProposer = cs.trade.proposerId === viewerId;
+    const isTarget   = cs.trade.targetId   === viewerId;
+    if (isProposer && cs.trade.targetOffer?.cards) {
+      cs.trade.targetOffer.cards = cs.trade.targetOffer.cards; // card IDs만 — 실제 카드 객체는 없음
+    }
+    if (isTarget && cs.trade.proposerOffer?.cards) {
+      cs.trade.proposerOffer.cards = cs.trade.proposerOffer.cards;
     }
   }
 
@@ -570,6 +657,10 @@ module.exports = {
   sellToBank,
   getCardBankValue,
   calcFinalAsset,
+  openTrade,
+  updateOffer,
+  readyTrade,
+  demandMoreTrade,
   proposeTrade,
   respondTrade,
   cancelTrade,

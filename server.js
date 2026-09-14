@@ -17,6 +17,10 @@ const {
   drawFromDeck,
   sellToBank,
   calcFinalAsset,
+  openTrade,
+  updateOffer,
+  readyTrade,
+  demandMoreTrade,
   proposeTrade,
   respondTrade,
   cancelTrade,
@@ -219,28 +223,59 @@ io.on('connection', (socket) => {
     broadcastState(roomId);
   });
 
-  socket.on('trade:propose', ({ targetId, offerCards, offerMoney, requestCards, requestMoney }, callback) => {
+  // ── 거래 실시간 시스템 ─────────────────────────────────────────
+
+  // 거래창 열기 (제안자가 상대 선택 후)
+  socket.on('trade:open', ({ targetId }, callback) => {
     const roomId = getRoomId(socket);
     const room = rooms[roomId];
     if (!room?.state) return callback?.({ success: false, error: '게임이 없습니다.' });
-    const result = proposeTrade(room.state, socket.id, targetId, offerCards, offerMoney, requestCards, requestMoney);
+    const currentPlayer = getCurrentPlayer(room.state);
+    if (currentPlayer.id !== socket.id) return callback?.({ success: false, error: '현재 당신의 턴이 아닙니다.' });
+    const result = openTrade(room.state, socket.id, targetId);
     if (result.error) return callback?.({ success: false, error: result.error });
     room.state = result;
     callback?.({ success: true });
     broadcastState(roomId);
   });
 
-  socket.on('trade:respond', ({ accepted }, callback) => {
+  // 오퍼 업데이트 (실시간 카드/현금 변경)
+  socket.on('trade:update_offer', ({ cards, money }, callback) => {
     const roomId = getRoomId(socket);
     const room = rooms[roomId];
     if (!room?.state) return callback?.({ success: false, error: '게임이 없습니다.' });
-    const result = respondTrade(room.state, socket.id, accepted);
+    const result = updateOffer(room.state, socket.id, cards || [], money || 0);
     if (result.error) return callback?.({ success: false, error: result.error });
     room.state = result;
     callback?.({ success: true });
     broadcastState(roomId);
   });
 
+  // 준비 토글 (양쪽이 ready → 자동 성사)
+  socket.on('trade:ready', ({ ready }, callback) => {
+    const roomId = getRoomId(socket);
+    const room = rooms[roomId];
+    if (!room?.state) return callback?.({ success: false, error: '게임이 없습니다.' });
+    const result = readyTrade(room.state, socket.id, ready !== false);
+    if (result.error) return callback?.({ success: false, error: result.error });
+    room.state = result;
+    callback?.({ success: true });
+    broadcastState(roomId);
+  });
+
+  // ▲ 더 큰 제안 요청
+  socket.on('trade:demand_more', (_, callback) => {
+    const roomId = getRoomId(socket);
+    const room = rooms[roomId];
+    if (!room?.state) return callback?.({ success: false, error: '게임이 없습니다.' });
+    const result = demandMoreTrade(room.state, socket.id);
+    if (result.error) return callback?.({ success: false, error: result.error });
+    room.state = result;
+    callback?.({ success: true });
+    broadcastState(roomId);
+  });
+
+  // 거래 취소
   socket.on('trade:cancel', (_, callback) => {
     const roomId = getRoomId(socket);
     const room = rooms[roomId];
@@ -251,6 +286,38 @@ io.on('connection', (socket) => {
     callback?.({ success: true });
     broadcastState(roomId);
   });
+
+  // 하위호환 — 기존 trade:propose / trade:respond 기능 유지
+  socket.on('trade:propose', ({ targetId }, callback) => {
+    const roomId = getRoomId(socket);
+    const room = rooms[roomId];
+    if (!room?.state) return callback?.({ success: false, error: '게임이 없습니다.' });
+    const currentPlayer = getCurrentPlayer(room.state);
+    if (currentPlayer.id !== socket.id) return callback?.({ success: false, error: '현재 당신의 턴이 아닙니다.' });
+    const result = openTrade(room.state, socket.id, targetId);
+    if (result.error) return callback?.({ success: false, error: result.error });
+    room.state = result;
+    callback?.({ success: true });
+    broadcastState(roomId);
+  });
+
+  socket.on('trade:respond', ({ accepted }, callback) => {
+    const roomId = getRoomId(socket);
+    const room = rooms[roomId];
+    if (!room?.state) return callback?.({ success: false, error: '게임이 없습니다.' });
+    if (!accepted) {
+      const result = cancelTrade(room.state, socket.id);
+      if (result.error) return callback?.({ success: false, error: result.error });
+      room.state = result;
+    } else {
+      const result = readyTrade(room.state, socket.id, true);
+      if (result.error) return callback?.({ success: false, error: result.error });
+      room.state = result;
+    }
+    callback?.({ success: true });
+    broadcastState(roomId);
+  });
+
 
   socket.on('ability:use', ({ cardId, params }, callback) => {
     const roomId = getRoomId(socket);
