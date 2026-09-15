@@ -6,7 +6,7 @@ import { CenterDeck3D } from './CenterDeck3D';
 import { ActionPanel } from './ActionPanel';
 import { OpponentSeat } from './OpponentSeat';
 import { ActionVisualNotifier } from './ActionVisualNotifier';
-import { TradeProposalModal, LiveTradeModal } from './TradeModal';
+import { TradeProposalModal } from './TradeModal';
 import { AbilityModal } from './AbilityModal';
 import { IconCrown, IconUser, IconMask, IconGem, IconHammer } from './SvgIcons';
 
@@ -56,6 +56,17 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
 
   const isTradeParticipant = trade?.active && (trade?.proposerId === me?.id || trade?.targetId === me?.id);
   const isThirdParty = trade?.active && trade?.proposerId !== me?.id && trade?.targetId !== me?.id;
+
+  // 상대방이 거래를 시작하면 수락자 화면에도 자동으로 모달 열기
+  useEffect(() => {
+    if (isTradeParticipant && !showTradeModal) {
+      setShowTradeModal(true);
+    }
+    // 거래가 끝나면 모달 닫기
+    if (!trade?.active && showTradeModal && !isTradeParticipant) {
+      setShowTradeModal(false);
+    }
+  }, [isTradeParticipant, trade?.active]);
   const tradeNames = isThirdParty ? {
     proposer: players.find(p => p.id === trade.proposerId)?.name,
     target: players.find(p => p.id === trade.targetId)?.name,
@@ -239,15 +250,6 @@ export function GameBoard({ gameState, myId, playerName, onError, onSuccess }) {
         />
       )}
 
-      {isTradeParticipant && (
-        <LiveTradeModal
-          gameState={gameState}
-          myId={me?.id}
-          onClose={() => {}}
-          onError={onError}
-          onSuccess={onSuccess}
-        />
-      )}
 
       {/* ── Truth Reveal Modal (Crisp Solid Background) ── */}
       {revealModal && (
